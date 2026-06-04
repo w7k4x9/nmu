@@ -1110,9 +1110,9 @@ function drawCard(x,W,H){
   const name=$('inName').value.trim()||'— —',aff=$('inAff').value,grade=$('inGrade').value;
   const no='2035-AE-'+($('inNo').value||'0000').padStart(4,'0'),m=pad2($('inM').value||3),d=pad2($('inD').value||2);
   const fx=336,rows=[['성명',name],['계열',aff],['등급',grade],['학번',no],['입학일',`2035 · ${m} · ${d}`],['유효기간','2039 · 02 · 28']];let fy=204;
-  rows.forEach(r=>{x.fillStyle=steel;x.font='500 19px "IBM Plex Sans KR",sans-serif';x.fillText(r[0],fx,fy);
-    const mono=['등급','학번','입학일','유효기간'].includes(r[0]);x.fillStyle=mono?val:paper;
-    x.font=mono?'500 30px "IBM Plex Mono",monospace':'600 30px "IBM Plex Sans KR",sans-serif';x.fillText(r[1],fx+128,fy);fy+=48;});
+  rows.forEach(r=>{x.font='500 19px "IBM Plex Sans KR",sans-serif';
+    x.fillStyle=steel;x.fillText(r[0],fx,fy);
+    x.fillStyle=paper;x.fillText(r[1],fx+128,fy);fy+=48;});
   /* 구분선 */
   x.strokeStyle='rgba(159,192,204,.16)';x.beginPath();x.moveTo(44,512);x.lineTo(W-44,512);x.stroke();
   /* 게이지(출력/통제) */
