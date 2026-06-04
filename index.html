@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>IMDI-AE · 국제 마력자 인재 양성 대학원</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='8 12 48 42'%3E%3Cg fill='%23111111'%3E%3Ccircle cx='32' cy='18.5' r='3.2'/%3E%3Cpath d='M29.4 22.5 L34.6 22.5 L33.4 40 L36 45.5 L32 48.5 L28 45.5 L30.6 40 Z'/%3E%3Cpath d='M34 24 L50.5 19.5 L49.5 22.6 L34 26.4 Z'/%3E%3Cpath d='M34 27.4 L47.5 24.4 L46.6 27.2 L34 30 Z'/%3E%3Cpath d='M34 31 L44.5 28.8 L43.7 31.4 L34 33.4 Z'/%3E%3Cpath d='M30 24 L13.5 19.5 L14.5 22.6 L30 26.4 Z'/%3E%3Cpath d='M30 27.4 L16.5 24.4 L17.4 27.2 L30 30 Z'/%3E%3Cpath d='M30 31 L19.5 28.8 L20.3 31.4 L30 33.4 Z'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+KR:wght@400;500;600;700;900&family=Oswald:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,1,0&display=block" rel="stylesheet">
+<style>
+/* =========================================================
+   국마소 IMDI-AE — 게임형 로비 프로토타입
+   ▼ 교체 슬롯은 <script> 최상단 CONFIG 에 모아두었습니다.
+   ========================================================= */
+:root{
+  --ink:#0c0f14; --ink-2:#141923; --ink-3:#1d242f;
+  --paper:#e9edf2; --paper-2:#aab4c0; --muted:#6c7783;
+  --line:rgba(180,196,212,.16); --line-2:rgba(180,196,212,.28);
+  --seal:#a8333a; --seal-2:#c4474e; --glass:#9fc0cc;
+  --accent:#9fc0cc; --accent-2:#b6d3dc; --accent-soft:rgba(159,192,204,.16); --glow:rgba(159,192,204,.28);
+  --serif:'Noto Serif KR',serif; --sans:'IBM Plex Sans KR',sans-serif;
+  --mono:'IBM Plex Mono',monospace; --label:'Oswald',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--ink);color:var(--paper);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{position:fixed;inset:0}
+::selection{background:var(--accent);color:var(--ink)}
+button{font-family:inherit;color:inherit;cursor:pointer}
+.msym{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;line-height:1;letter-spacing:normal;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 40;-webkit-font-smoothing:antialiased;
+  font-feature-settings:'liga';-webkit-font-feature-settings:'liga';user-select:none}
+
+/* atmospheric base bg (결계 안쪽) */
+.world-bg{position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(120% 90% at 50% 8%, rgba(159,192,204,.10), transparent 55%),
+    radial-gradient(140% 120% at 50% 120%, rgba(168,51,58,.06), transparent 60%),
+    linear-gradient(180deg,#0a0d12 0%,#111722 48%,#0b0f15 100%);
+}
+.world-bg::before{content:"";position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(rgba(159,192,204,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(159,192,204,.05) 1px,transparent 1px);
+  background-size:64px 64px;mask-image:radial-gradient(120% 80% at 50% 40%,#000,transparent 80%)}
+.world-bg::after{content:"";position:absolute;inset:0;mix-blend-mode:overlay;opacity:.35;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.5) 2px 3px)} /* scanline */
+
+/* refracted seam (결계 솔기) drifting */
+.seam{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.5;
+  background:linear-gradient(115deg,transparent 38%,rgba(232,214,192,.10) 49%,rgba(159,192,204,.16) 50%,transparent 61%);
+  background-size:300% 300%;animation:seamDrift 14s ease-in-out infinite}
+@keyframes seamDrift{0%,100%{background-position:0% 0%}50%{background-position:100% 100%}}
+
+/* ================= custom cursor ================= */
+.cur,.cur-ring{position:fixed;top:0;left:0;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);will-change:transform}
+.cur{font-family:var(--mono);font-size:15px;color:var(--glass);text-shadow:0 0 6px rgba(159,192,204,.6)}
+.cur-ring{width:26px;height:26px;border:1px solid rgba(159,192,204,.4);border-radius:50%;transition:width .15s,height .15s,opacity .3s}
+.spark{position:fixed;z-index:9998;pointer-events:none;transform:translate(-50%,-50%);font-family:var(--mono);color:var(--glass);
+  animation:sparkPop .5s ease-out forwards;text-shadow:0 0 10px rgba(159,192,204,.9)}
+@keyframes sparkPop{0%{opacity:1;transform:translate(-50%,-50%) scale(.3) rotate(0)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.6) rotate(45deg)}}
+@media (pointer:fine){.hide-cursor *{cursor:none !important}}
+@media (pointer:coarse){.cur,.cur-ring{display:none}}
+
+/* ================= ENTRY GATE ================= */
+#gate{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(circle at 50% 42%,#10151d,#06080c 78%);transition:opacity 1s ease,visibility 1s}
+#gate.gone{opacity:0;visibility:hidden}
+#gate .emblem{width:84px;height:84px;color:var(--paper-2);margin-bottom:26px;animation:floaty 6s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+#gate .hanja{font-family:var(--serif);font-weight:900;font-size:clamp(22px,4.4vw,34px);letter-spacing:.1em;color:var(--paper)}
+#gate .romaja{font-family:var(--label);font-size:11px;letter-spacing:.4em;color:var(--muted);text-transform:uppercase;margin-top:10px}
+#gate .ask{font-family:var(--serif);font-size:clamp(15px,2.6vw,19px);color:var(--paper-2);margin:46px 0 26px;letter-spacing:.04em}
+#gate .enter{position:relative;font-family:var(--label);letter-spacing:.34em;text-transform:uppercase;font-size:13px;color:var(--paper);
+  background:none;border:1px solid var(--line-2);padding:15px 46px;border-radius:2px;overflow:hidden;transition:.4s}
+#gate .enter:hover{border-color:var(--glass);color:#fff;box-shadow:0 0 30px -8px rgba(159,192,204,.4)}
+#gate .enter span{position:relative;z-index:2}
+#gate .enter::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent,rgba(159,192,204,.18),transparent);transform:translateX(-120%);transition:transform .8s}
+#gate .enter:hover::after{transform:translateX(120%)}
+#gate .fine{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:#3c4651;margin-top:40px;text-transform:uppercase}
+
+/* refraction transition */
+#transition{position:fixed;inset:0;z-index:190;pointer-events:none;opacity:0}
+#transition video{width:100%;height:100%;object-fit:cover}
+#transition.flash{animation:refract 1.1s ease forwards}
+@keyframes refract{0%{opacity:0}18%{opacity:1;backdrop-filter:blur(0)}55%{opacity:1}100%{opacity:0}}
+#transition .sweep{position:absolute;inset:0;background:
+  linear-gradient(108deg,transparent 40%,rgba(232,214,192,.5) 49%,rgba(159,192,204,.7) 50%,rgba(232,214,192,.5) 51%,transparent 60%);
+  background-size:260% 100%;background-position:-60% 0}
+#transition.flash .sweep{animation:sweepGo 1.1s ease forwards}
+@keyframes sweepGo{0%{background-position:-60% 0}100%{background-position:160% 0}}
+
+/* ================= LOBBY ================= */
+#lobby{position:fixed;inset:0;z-index:10;opacity:0;transition:opacity 1.1s ease .2s}
+#lobby.on{opacity:1}
+
+/* HUD top bar */
+.hud{position:absolute;top:0;left:0;right:0;z-index:30;display:flex;justify-content:flex-start;align-items:center;
+  padding:clamp(12px,2.4vmin,20px) clamp(14px,3vmin,24px);gap:clamp(10px,2vmin,18px);pointer-events:none;flex-wrap:wrap}
+.hud .cluster{display:flex;gap:clamp(8px,1.6vmin,12px);align-items:stretch;pointer-events:auto}
+.chip{display:flex;flex-direction:column;justify-content:center;gap:3px;background:rgba(12,15,20,.55);backdrop-filter:blur(8px);
+  border:1px solid var(--line);border-radius:4px;padding:clamp(7px,1.4vmin,10px) clamp(11px,2vmin,15px);min-width:0;
+  min-height:clamp(46px,8.4vmin,58px)}
+.chip .k{font-family:var(--label);font-size:clamp(8px,1.5vmin,9.5px);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.chip .v{font-family:var(--mono);font-size:clamp(12px,2.4vmin,15px);color:var(--paper);letter-spacing:.02em;white-space:nowrap}
+.chip.aff{border-color:var(--a,var(--accent))}
+.chip.aff .v{color:var(--a,var(--accent))}
+.chip .bar{width:clamp(60px,11vmin,86px);height:4px;background:rgba(180,196,212,.16);border-radius:3px;overflow:hidden;margin-top:4px}
+.chip .bar i{display:block;height:100%;background:var(--paper);transition:width .6s ease}
+.hud-emblem{display:flex;align-items:center;gap:clamp(9px,1.8vmin,13px);pointer-events:auto}
+.hud-emblem svg{width:clamp(40px,8vmin,58px);height:clamp(40px,8vmin,58px);color:var(--paper-2);flex:0 0 auto}
+.hud-emblem .t{font-family:var(--serif);font-size:clamp(15px,3vmin,20px);font-weight:700;letter-spacing:.05em;line-height:1.05;color:var(--paper)}
+.hud-emblem .t small{display:block;font-family:var(--label);font-size:clamp(8px,1.5vmin,10px);letter-spacing:.26em;color:var(--muted);text-transform:uppercase;margin-top:2px;font-weight:400}
+
+/* character stage */
+.stage{position:absolute;inset:0;z-index:15;overflow:hidden;display:flex;align-items:center}
+.track{display:flex;align-items:center;height:100%;transition:transform .52s cubic-bezier(.22,1,.36,1);will-change:transform}
+.track.drag{transition:none}
+.plate{position:relative;flex:0 0 auto;height:100%;display:flex;align-items:flex-end;justify-content:center;
+  opacity:.28;transform:scale(.8);transition:opacity .55s,transform .55s;filter:grayscale(.4) brightness(.7)}
+.plate.active{opacity:1;transform:scale(1);filter:none}
+.plate .glow{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:78%;height:72%;border-radius:50%;
+  background:radial-gradient(closest-side,var(--g),transparent 72%);filter:blur(8px);z-index:0}
+.plate .figure{position:relative;z-index:1;height:84%;width:auto;display:flex;align-items:flex-end}
+.plate .figure svg{height:100%;width:auto;color:var(--a);opacity:.5}
+.plate video{position:absolute;z-index:1;height:90%;width:auto;left:50%;bottom:0;transform:translateX(-50%);object-fit:contain}
+.plate .nameplate{position:absolute;z-index:2;bottom:11%;left:50%;transform:translateX(-50%);text-align:center;width:max-content}
+.plate .nameplate .nm{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3.4vw,30px);letter-spacing:.03em;text-shadow:0 2px 18px rgba(0,0,0,.7)}
+.plate .nameplate .meta{margin-top:7px;display:inline-flex;gap:9px;align-items:center;font-family:var(--label);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--paper-2)}
+.plate .nameplate .meta .dot{color:var(--accent)}
+.plate .nameplate .ul{height:1px;width:60%;margin:11px auto 0;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.plate .tapcue{position:absolute;z-index:2;bottom:5%;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--paper-2);opacity:0;transition:.4s;text-transform:uppercase}
+.plate.active .tapcue{opacity:.7;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:.85}}
+
+/* swipe arrows */
+.swipe{position:absolute;top:50%;transform:translateY(-50%);z-index:25;font-family:var(--serif);font-size:34px;color:var(--paper-2);
+  background:rgba(12,15,20,.4);backdrop-filter:blur(6px);border:1px solid var(--line);width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;transition:.25s;opacity:.6}
+.swipe:hover{opacity:1;border-color:var(--glass);color:#fff}
+.swipe.prev{left:18px}.swipe.next{right:18px}
+.swipe .msym{font-size:28px;font-variation-settings:'FILL' 1,'wght' 500,'opsz' 40}
+
+/* dots */
+.dots{position:absolute;z-index:26;left:50%;transform:translateX(-50%);display:flex;gap:8px}
+.dots .d{width:6px;height:6px;border-radius:50%;background:rgba(180,196,212,.3);transition:.3s;cursor:pointer}
+.dots .d.on{background:var(--accent);width:20px;border-radius:3px}
+
+/* menu */
+.menu{position:absolute;z-index:30;display:flex;gap:10px}
+.menu .item{position:relative;background:rgba(12,15,20,.5);backdrop-filter:blur(10px);border:1px solid var(--line-2);border-radius:3px;
+  padding:13px 22px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:96px;transition:.25s;overflow:hidden}
+.menu .item:hover{border-color:var(--glass);background:rgba(20,28,38,.8);transform:translateY(-2px)}
+.menu .item .ko{font-family:var(--serif);font-size:14px;font-weight:600;letter-spacing:.04em}
+.menu .item .en{font-family:var(--label);font-size:8px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase}
+.menu .item::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:center;transition:transform .3s}
+.menu .item:hover::after{transform:scaleX(1)}
+
+/* bgm toggle */
+.bgm{position:absolute;z-index:30;width:42px;height:42px;border-radius:50%;background:rgba(12,15,20,.5);backdrop-filter:blur(8px);
+  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--paper-2);font-size:15px;transition:.25s}
+.bgm:hover{border-color:var(--glass);color:#fff}
+.bgm.off{color:var(--muted)}
+.bgm .eq{display:flex;gap:2px;align-items:flex-end;height:14px}
+.bgm .eq i{width:2.5px;background:currentColor;border-radius:1px;animation:eq .9s ease-in-out infinite}
+.bgm .eq i:nth-child(1){height:6px;animation-delay:0s}.bgm .eq i:nth-child(2){height:12px;animation-delay:.2s}.bgm .eq i:nth-child(3){height:8px;animation-delay:.4s}
+.bgm.off .eq i{animation-play-state:paused;height:5px}
+@keyframes eq{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+
+/* ---- layout: 메뉴는 항상 하단 가로 카드(FAB). 캐릭터 이름은 그 위로 — 안 가림 ---- */
+.stage{bottom:112px}
+.dots{bottom:86px}
+.menu{left:0;right:0;bottom:max(18px,env(safe-area-inset-bottom));justify-content:center;gap:9px;padding:0 14px}
+.menu .item{flex:1 1 0;min-width:0;max-width:152px;padding:11px 8px 12px;border-radius:7px}
+.menu .item .ko{font-size:clamp(12px,3.3vw,14px)}
+
+/* ---- layout: LANDSCAPE / 데스크톱 — 메뉴 좌측 세로 정렬 ---- */
+@media (orientation:landscape){
+  .stage{bottom:0}
+  .dots{bottom:24px}
+  .menu{flex-direction:column;left:28px;right:auto;bottom:auto;top:50%;transform:translateY(-50%);justify-content:center;gap:10px;padding:0}
+  .menu .item{flex:0 0 auto;width:158px;max-width:none;align-items:flex-start;gap:3px;padding:13px 18px;border-radius:4px}
+  .menu .item .ko{font-size:14px}
+  .menu .item .en{display:block}
+  .menu .item::after{left:0;right:auto;bottom:0;top:auto;width:2px;height:0;background:var(--accent);transform:none;transition:height .3s}
+  .menu .item:hover::after{height:100%}
+}
+
+/* ================= SCENARIO (VN) ================= */
+#scenario{position:fixed;inset:0;z-index:100;background:#06080c;opacity:0;visibility:hidden;transition:opacity .6s,visibility .6s}
+#scenario.on{opacity:1;visibility:visible}
+#scenario .cg{position:absolute;inset:0;z-index:0;transition:opacity .8s}
+#scenario .cg .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#scenario .cg .ph .label{font-family:var(--serif);font-size:clamp(20px,3.6vw,30px);color:rgba(233,237,242,.22);letter-spacing:.08em;text-align:center;padding:0 24px}
+#scenario .cg .ph .cut{font-family:var(--mono);font-size:11px;letter-spacing:.3em;color:rgba(159,192,204,.4);text-transform:uppercase}
+#scenario .grad{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(6,8,12,.45) 0%,transparent 30%,transparent 52%,rgba(6,8,12,.86) 88%)}
+#scenario .vn-top{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:18px 22px}
+.vn-back{display:flex;align-items:center;gap:8px;background:rgba(12,15,20,.45);backdrop-filter:blur(6px);border:1px solid var(--line);
+  border-radius:2px;padding:9px 16px;font-family:var(--label);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--paper-2);transition:.25s}
+.vn-back:hover{border-color:var(--glass);color:#fff}
+#scenario .vn-cuts{display:flex;gap:7px}
+#scenario .vn-cuts .c{width:24px;height:3px;border-radius:2px;background:rgba(180,196,212,.25);transition:.3s}
+#scenario .vn-cuts .c.on{background:var(--accent)}
+#scenario .vn-box{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:0 22px 36px;cursor:pointer}
+#scenario .vn-inner{max-width:880px;margin:0 auto}
+#scenario .speaker{font-family:var(--serif);font-weight:700;font-size:clamp(17px,2.6vw,21px);letter-spacing:.03em;margin-bottom:12px;color:var(--accent);min-height:1em}
+#scenario .speaker.narr{color:var(--paper-2);font-style:italic;font-weight:400;font-size:clamp(14px,2.2vw,16px)}
+#scenario .line{font-size:clamp(15px,2.4vw,18px);line-height:1.85;color:var(--paper);min-height:1.85em;font-weight:300}
+#scenario .speaker.narr + .line{font-style:italic;color:var(--paper-2)}
+#scenario .next{display:flex;align-items:center;justify-content:flex-end;margin-top:14px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--muted);animation:pulse 2s ease-in-out infinite}
+#scenario .next::after{content:"\e5cf";font-family:'Material Symbols Rounded';font-variation-settings:'FILL' 1,'wght' 400,'opsz' 20;font-size:16px;margin-left:6px}
+
+/* ================= OVERLAYS ================= */
+.overlay{position:fixed;inset:0;z-index:90;background:linear-gradient(180deg,#0a0d12,#0f141d);opacity:0;visibility:hidden;
+  transform:translateY(14px);transition:opacity .5s,visibility .5s,transform .5s;overflow-y:auto;overflow-x:hidden}
+.overlay.on{opacity:1;visibility:visible;transform:none}
+.ov-top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:16px;padding:18px 26px;
+  background:linear-gradient(180deg,rgba(10,13,18,.96),rgba(10,13,18,.7) 70%,transparent);backdrop-filter:blur(4px)}
+.ov-top .ttl{font-family:var(--serif);font-size:18px;font-weight:700;letter-spacing:.04em}
+.ov-top .en{font-family:var(--label);font-size:10px;letter-spacing:.26em;color:var(--muted);text-transform:uppercase;margin-left:auto}
+.ov-wrap{max-width:1000px;margin:0 auto;padding:10px 26px 90px}
+
+/* worldview scroll story */
+.ws{padding:40px 0}
+.ws .kick{font-family:var(--mono);font-size:11px;letter-spacing:.3em;color:var(--glass);text-transform:uppercase;margin-bottom:18px}
+.ws h2{font-family:var(--serif);font-weight:900;font-size:clamp(26px,5vw,46px);line-height:1.2;letter-spacing:-.01em}
+.ws .big{font-family:var(--serif);font-size:clamp(17px,2.6vw,21px);color:var(--paper);font-weight:300;line-height:1.95;margin-top:24px;max-width:720px}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .9s ease,transform .9s ease}
+.reveal.seen{opacity:1;transform:none}
+.ws-block{padding:46px 0;border-top:1px solid var(--line)}
+.ws-block .idx{font-family:var(--mono);font-size:12px;color:var(--seal-2);letter-spacing:.1em}
+.ws-block h3{font-family:var(--serif);font-size:clamp(20px,3vw,28px);font-weight:700;margin:10px 0 16px}
+.ws-block p{font-size:15.5px;line-height:1.95;color:var(--paper-2);font-weight:300;max-width:680px}
+.ws-block p + p{margin-top:14px}
+
+/* info cards (대학원 소개) */
+.card{background:rgba(20,26,36,.5);border:1px solid var(--line);border-radius:4px;padding:30px 32px;margin-bottom:22px}
+.card .sec{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:22px}
+.card .sec h3{font-family:var(--serif);font-size:20px;font-weight:700}
+.card .sec .idx{font-family:var(--mono);font-size:12px;color:var(--seal-2)}
+.card .sec .en{font-family:var(--label);font-size:10px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase;margin-left:auto}
+.igrid{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line)}
+.igrid .r{padding:15px 18px;border-bottom:1px solid var(--line)}
+.igrid .r:nth-child(odd){border-right:1px solid var(--line)}
+.igrid .k{font-family:var(--label);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.igrid .v{font-size:14px;color:var(--paper)}.igrid .s{font-size:12px;color:var(--muted);margin-top:3px}
+.zones{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.zone{border:1px solid var(--line);border-radius:4px;padding:18px 20px;background:rgba(12,15,20,.4);transition:.25s;position:relative}
+.zone:hover{border-color:var(--accent);background:rgba(20,28,38,.6)}
+.zone .tg{position:absolute;top:14px;right:18px;font-family:var(--mono);font-size:20px;color:var(--line-2)}
+.zone h4{font-family:var(--serif);font-size:16px;font-weight:600;margin-bottom:3px}
+.zone .sub{font-family:var(--label);font-size:8.5px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:11px}
+.zone li{list-style:none;font-size:12.5px;color:var(--paper-2);padding:3px 0 3px 13px;position:relative}
+.zone li::before{content:"·";position:absolute;left:2px;color:var(--seal-2)}
+.zone.lock{background:repeating-linear-gradient(45deg,rgba(40,20,22,.4),rgba(40,20,22,.4) 9px,rgba(30,16,18,.4) 9px,rgba(30,16,18,.4) 18px)}
+.hud4{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.hud4 .b{border:1px solid var(--line);border-radius:4px;padding:16px;background:rgba(12,15,20,.4)}
+.hud4 .b .g{font-family:var(--mono);font-size:13px;color:var(--seal-2);margin-bottom:7px}
+.hud4 .b h5{font-family:var(--label);font-size:11px;letter-spacing:.18em;margin-bottom:6px}
+.hud4 .b p{font-size:12px;color:var(--muted);line-height:1.7;font-weight:300}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:rgba(8,11,16,.7);color:var(--paper);font-weight:500;padding:11px 8px;font-size:12px;border-bottom:1px solid var(--line-2)}
+thead th:first-child{font-family:var(--label);letter-spacing:.12em;text-transform:uppercase;font-size:10.5px}
+tbody td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:center;color:var(--paper-2)}
+tbody td:first-child{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.tt td.hi{color:var(--seal-2);font-weight:500}
+.note{margin-top:18px;display:flex;gap:13px;align-items:flex-start;background:rgba(12,15,20,.45);border-left:2px solid var(--seal);padding:14px 18px}
+.note .lb{font-family:var(--label);font-size:10px;letter-spacing:.18em;color:var(--seal-2);text-transform:uppercase;flex:0 0 auto;padding-top:2px}
+.note p{font-size:13px;color:var(--paper-2);line-height:1.8;font-weight:300}
+.events{border:1px solid var(--line)}
+.ev{padding:18px 22px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:110px 1fr;gap:20px}
+.ev:last-child{border:none}.ev .dt{font-family:var(--mono);font-size:12px;color:var(--seal-2);font-weight:500}
+.ev h4{font-family:var(--serif);font-size:15px;font-weight:600;margin-bottom:7px}
+.ev li{list-style:none;font-size:12.5px;color:var(--paper-2);padding:2px 0 2px 12px;position:relative}
+.ev li::before{content:"–";position:absolute;left:0;color:var(--muted)}
+
+/* student ID */
+.id-stage{display:grid;grid-template-columns:1fr 360px;gap:32px;align-items:start}
+@media(max-width:760px){.id-stage{grid-template-columns:1fr}.igrid{grid-template-columns:1fr}.igrid .r:nth-child(odd){border-right:none}}
+.id-card{width:100%;max-width:560px;aspect-ratio:1.55/1;border-radius:12px;overflow:hidden;background:linear-gradient(158deg,#171c26,#0c0f15);
+  border:1px solid var(--line-2);box-shadow:0 22px 50px -22px rgba(0,0,0,.8);position:relative;container-type:inline-size}
+.id-card .ih{background:rgba(0,0,0,.32);border-bottom:1px solid var(--accent-soft);padding:3.2cqw 4cqw;display:flex;align-items:center;gap:2.4cqw}
+.id-card .ih svg{width:7cqw;height:7cqw;color:var(--accent);flex:0 0 auto}
+.id-card .ih .t1{font-family:var(--serif);font-weight:700;font-size:4cqw;letter-spacing:.03em;color:#fff}
+.id-card .ih .t2{font-family:var(--label);font-size:1.9cqw;letter-spacing:.18em;color:var(--paper-2);text-transform:uppercase;margin-top:.5cqw}
+.id-card .ih .r{margin-left:auto;text-align:right}
+.id-card .ih .r .a{font-family:var(--label);font-size:1.9cqw;letter-spacing:.2em;color:var(--paper-2);text-transform:uppercase}
+.id-card .ih .r .b{font-family:var(--serif);font-size:3.6cqw;font-weight:600;color:#fff}
+.id-body{display:flex;gap:4cqw;padding:4cqw 4cqw 2cqw}
+.id-photo{width:27%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:linear-gradient(160deg,#2a3340,#181e27);
+  border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.id-photo img{width:100%;height:100%;object-fit:cover}
+.id-photo svg{color:#46515f;width:30%;height:auto}
+.id-fields{flex:1;display:flex;flex-direction:column;justify-content:center;gap:2.2cqw}
+.id-fields .f{display:grid;grid-template-columns:12cqw 1fr;gap:3cqw;align-items:baseline}
+.id-fields .k{font-family:var(--label);font-size:2.3cqw;letter-spacing:.1em;color:var(--paper-2);text-transform:uppercase}
+.id-fields .vv{font-size:3.4cqw;font-weight:600;color:#fff}
+.id-fields .vv.m{font-family:var(--mono);font-weight:500;letter-spacing:.02em;color:#eef3f8}
+.id-foot{padding:3cqw 4cqw 3.4cqw;border-top:1px solid var(--accent-soft);display:flex;align-items:flex-end;gap:4cqw;position:relative;z-index:2}
+.id-foot .gauges{flex:1;display:flex;flex-direction:column;gap:1.8cqw;max-width:54%}
+.id-foot .g{display:flex;align-items:center;gap:2cqw}
+.id-foot .g .gl{font-family:var(--label);font-size:2.2cqw;letter-spacing:.1em;color:var(--paper-2);text-transform:uppercase;width:6cqw;flex:0 0 auto}
+.id-foot .g .gbar{flex:1;height:1.4cqw;min-height:5px;background:rgba(180,196,212,.18);border-radius:3px;overflow:hidden}
+.id-foot .g .gbar i{display:block;height:100%;background:var(--accent);transition:width .4s}
+.id-foot .g .gv{font-family:var(--mono);font-size:2.7cqw;color:var(--accent);width:7cqw;text-align:right;flex:0 0 auto}
+.id-foot .bcwrap{flex:0 0 auto;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:1.4cqw}
+.id-foot .bcwrap .au{font-family:var(--label);font-size:1.7cqw;letter-spacing:.14em;color:var(--seal-2);text-transform:uppercase}
+.id-foot .bcwrap .barcode{display:block;height:6cqw;width:auto}
+.id-wm{position:absolute;right:-3%;bottom:-10%;width:42%;aspect-ratio:1;color:#fff;opacity:.07;z-index:1;pointer-events:none}
+.id-form .ttl{font-family:var(--serif);font-size:17px;font-weight:700;margin-bottom:6px}
+.id-form .ds{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.7;font-weight:300}
+.fld{margin-bottom:14px}.fld label{display:block;font-family:var(--label);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--paper-2);margin-bottom:6px}
+.fld input,.fld select{width:100%;padding:9px 11px;background:rgba(12,15,20,.6);border:1px solid var(--line-2);border-radius:2px;color:var(--paper);font-family:var(--sans);font-size:13px;transition:.2s}
+.fld input:focus,.fld select:focus{outline:none;border-color:var(--accent)}
+.fld.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{margin-bottom:16px}
+.stat .top{display:flex;justify-content:space-between;align-items:baseline}
+.stat .top .nm{font-family:var(--label);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--paper-2)}
+.stat .top .vv{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.02em}
+.stat .exp{font-size:11px;color:var(--muted);margin:4px 0 9px;line-height:1.5;font-weight:300}
+.slider{position:relative;height:18px;cursor:pointer;touch-action:none}
+.slider .trk{position:absolute;top:7px;left:0;right:0;height:4px;background:rgba(180,196,212,.18);border-radius:3px}
+.slider .fill{position:absolute;top:7px;left:0;height:4px;background:var(--accent);border-radius:3px}
+.slider .hd{position:absolute;top:0;width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid #0c0f14;box-shadow:0 0 0 1px var(--accent);transform:translateX(-50%);transition:box-shadow .15s}
+.slider:hover .hd{box-shadow:0 0 0 4px rgba(159,192,204,.25)}
+.btn{width:100%;padding:11px;background:var(--accent-soft);border:1px solid var(--line-2);border-radius:3px;font-size:13px;font-weight:500;letter-spacing:.02em;color:var(--paper);transition:.2s}
+.btn:hover{background:rgba(159,192,204,.24);border-color:var(--accent)}
+.btn.dl{background:var(--accent);border-color:var(--accent);margin-top:10px;color:var(--ink);font-weight:600}
+.btn.dl:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.name-row{display:flex;gap:8px;align-items:stretch}
+.name-row input{flex:1}
+.dice{flex:0 0 auto;width:42px;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);border:1px solid var(--line-2);border-radius:3px;color:var(--accent);transition:.2s}
+.dice:hover{background:rgba(159,192,204,.24);border-color:var(--accent);color:var(--accent-2)}
+.dice:active{transform:scale(.94)}
+.dice svg{width:20px;height:20px}
+.dice .msym{font-size:21px;font-variation-settings:'FILL' 1,'wght' 400,'opsz' 24}
+.hint{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:12px}
+
+.toast{position:fixed;left:50%;bottom:30%;transform:translateX(-50%) translateY(20px);z-index:150;background:rgba(12,15,20,.92);
+  border:1px solid var(--line-2);border-radius:3px;padding:13px 24px;font-size:13px;color:var(--paper-2);opacity:0;transition:.4s;pointer-events:none;backdrop-filter:blur(8px)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+select option{background:#12161e;color:var(--paper)}
+::-webkit-scrollbar{width:9px}::-webkit-scrollbar-track{background:#0a0d12}::-webkit-scrollbar-thumb{background:#2a333f;border-radius:4px}
+</style>
+</head>
+<body class="hide-cursor">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="eagle" viewBox="0 0 64 64">
+  <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-width="1"/>
+  <circle cx="32" cy="32" r="25.5" fill="none" stroke="currentColor" stroke-width="0.6"/>
+  <circle cx="32" cy="18.5" r="2.7" fill="currentColor"/>
+  <path d="M30 20 L34 20 L32 23.5 Z" fill="currentColor"/>
+  <path d="M29.4 22.5 L34.6 22.5 L33.4 40 L36 45.5 L32 48.5 L28 45.5 L30.6 40 Z" fill="currentColor"/>
+  <path d="M34 24 L50.5 19.5 L49.5 22.6 L34 26.4 Z" fill="currentColor"/>
+  <path d="M34 27.4 L47.5 24.4 L46.6 27.2 L34 30 Z" fill="currentColor"/>
+  <path d="M34 31 L44.5 28.8 L43.7 31.4 L34 33.4 Z" fill="currentColor"/>
+  <path d="M30 24 L13.5 19.5 L14.5 22.6 L30 26.4 Z" fill="currentColor"/>
+  <path d="M30 27.4 L16.5 24.4 L17.4 27.2 L30 30 Z" fill="currentColor"/>
+  <path d="M30 31 L19.5 28.8 L20.3 31.4 L30 33.4 Z" fill="currentColor"/>
+</symbol>
+<symbol id="bust" viewBox="0 0 200 320"><path d="M100 40c26 0 46 22 46 52 0 24-13 44-30 52 34 8 64 38 64 92v84H20v-84c0-54 30-84 64-92-17-8-30-28-30-52 0-30 20-52 46-52Z" fill="currentColor"/></symbol>
+</svg>
+
+<div class="world-bg"></div>
+<div class="seam"></div>
+
+<!-- custom cursor -->
+<div class="cur" id="cur">▸</div>
+<div class="cur-ring" id="curRing"></div>
+
+<!-- ===== ENTRY GATE ===== -->
+<div id="gate">
+  <svg class="emblem"><use href="#eagle"/></svg>
+  <div class="hanja">國際魔力者人材養成大學院</div>
+  <div class="romaja">IMDI-AE · Korea Campus</div>
+  <div class="ask">결계를 통과하시겠습니까.</div>
+  <button class="enter" id="enterBtn"><span>입장 · ENTER</span></button>
+  <div class="fine">ARKEN GROUP 위탁 · 결계 구역 내 열람용</div>
+</div>
+
+<!-- refraction transition -->
+<div id="transition">
+  <video id="transVideo" muted playsinline preload="auto"></video>
+  <div class="sweep"></div>
+</div>
+
+<!-- ===== LOBBY ===== -->
+<div id="lobby">
+  <div class="hud">
+    <div class="hud-emblem"><svg><use href="#eagle"/></svg><div class="t">IMDI-AE<small>Korea Campus</small></div></div>
+    <div class="cluster">
+      <div class="chip aff"><span class="k">계열 · 등급</span><span class="v" id="hAff">번개 · S</span></div>
+      <div class="chip"><span class="k">출력 / Output</span><span class="v" id="hOut">92%</span><span class="bar"><i id="hOutBar" style="width:92%"></i></span></div>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="track" id="track"></div>
+  </div>
+
+  <button class="swipe prev" id="prev" aria-label="이전"><span class="msym">chevron_left</span></button>
+  <button class="swipe next" id="next" aria-label="다음"><span class="msym">chevron_right</span></button>
+  <div class="dots" id="dots"></div>
+
+  <div class="menu">
+    <button class="item" onclick="openOverlay('world')"><span class="ko">세계관</span><span class="en">World</span></button>
+    <button class="item" onclick="openOverlay('info')"><span class="ko">대학원 소개</span><span class="en">Institute</span></button>
+    <button class="item" onclick="openOverlay('id')"><span class="ko">원생증</span><span class="en">Student ID</span></button>
+  </div>
+</div>
+
+<!-- ===== SCENARIO ===== -->
+<div id="scenario">
+  <div class="cg" id="cg"><video id="cgVideo" muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"></video><div class="ph" id="cgPh"><div class="cut" id="cgCut">CUT 1</div><div class="label" id="cgLabel"></div></div></div>
+  <div class="grad"></div>
+  <div class="vn-top">
+    <button class="vn-back" onclick="closeScenario()"><span class="msym" style="font-size:18px;margin-right:2px">arrow_back</span>뒤로</button>
+    <div class="vn-cuts" id="vnCuts"></div>
+  </div>
+  <div class="vn-box" id="vnBox">
+    <div class="vn-inner">
+      <div class="speaker" id="vnSpeaker"></div>
+      <div class="line" id="vnLine"></div>
+      <div class="next" id="vnNext">다음</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OVERLAY: WORLD ===== -->
+<div class="overlay" id="ov-world">
+  <div class="ov-top"><button class="vn-back" onclick="closeOverlay('world')"><span class="msym" style="font-size:18px;margin-right:2px">arrow_back</span>뒤로</button><span class="ttl">세계관</span><span class="en">Worldview</span></div>
+  <div class="ov-wrap">
+    <div class="ws reveal">
+      <div class="kick">2035 · 결계 안쪽의 기록</div>
+      <h2>안개가 세계를 덮었고,<br>그 안에서 마력은 학문이 되었다.</h2>
+      <p class="big">남극에서 발굴된 미지의 물질 VENTA. 그것이 세상에 알려진 순간부터, 인류의 시간표는 두 개로 갈라졌다. 측정과 강의로 나뉜 겉면의 시간, 그리고 결계 안팎의 비밀이 흐르는 이면의 시간.</p>
+    </div>
+    <div class="ws-block reveal"><div class="idx">01 — VENTA</div><h3>발굴, 그리고 독점</h3>
+      <p>남극의 얼음 아래에서 발견된 VENTA는 인간의 마력을 발현시키는 근원으로 밝혀졌다. 거대 기업 ARKEN은 이 물질을 가장 먼저 손에 넣었고, 그 독점은 곧 세계의 질서를 다시 썼다.</p>
+      <p>한국 캠퍼스 지하에는 세계 2위 규모로 추정되는 VENTA 지층이 잠들어 있다. 그것이 이곳이 단순한 학교가 아닌 이유다.</p></div>
+    <div class="ws-block reveal"><div class="idx">02 — GREY MIST</div><h3>잿빛 안개</h3>
+      <p>VENTA의 발굴과 함께 대기에는 GREY MIST가 퍼졌다. 안개에 노출된 자는 감염되어 변이체가 된다. 화기는 그 앞에서 무력하며, 오직 마력만이 유효하다.</p>
+      <p>결계는 이 안개를 막기 위한 얇은 유리 같은 막이다. 솔기에서 빛이 어긋난 색으로 굴절하는 그 경계 안에서만, 사람들은 비로소 숨을 쉰다.</p></div>
+    <div class="ws-block reveal"><div class="idx">03 — 17개 양성소</div><h3>협약 이후의 세계</h3>
+      <p>UN 마력자 협약 이후 세계 17개 지역에 마력자 양성 기관이 세워졌다. IMDI-AE 한국 캠퍼스는 그중 하나로, ARKEN의 위탁 아래 운영된다.</p>
+      <p>표면적으로는 인재의 육성. 그러나 길러진 마력자 중 일부는 끝내 '다른 곳'으로 보내진다. 묻지 않는 것이 이 학원의 첫 수업이다.</p></div>
+    <div class="ws-block reveal"><div class="idx">04 — MRI · 공명</div><h3>언어가 사라진 자리</h3>
+      <p>각성자는 공명을 통해 한국어·일본어·영어·독일어·프랑스어가 자동으로 통역된다. 국적이 다른 이들이 한자리에서 대화할 수 있는 건 이 공명 덕분이다.</p>
+      <p>그러나 공명이 소실되면 통역은 끊긴다. 그리고 어떤 이는, 공명 없이도 의도가 읽힌다.</p></div>
+  </div>
+</div>
+
+<!-- ===== OVERLAY: INFO ===== -->
+<div class="overlay" id="ov-info">
+  <div class="ov-top"><button class="vn-back" onclick="closeOverlay('info')"><span class="msym" style="font-size:18px;margin-right:2px">arrow_back</span>뒤로</button><span class="ttl">대학원 소개</span><span class="en">Institute</span></div>
+  <div class="ov-wrap">
+    <div class="card"><div class="sec"><span class="idx">01</span><h3>기관 정보</h3><span class="en">Profile</span></div>
+      <div class="igrid">
+        <div class="r"><div class="k">정식 명칭</div><div class="v">국제 마력자 인재 양성 대학원 · 한국 캠퍼스</div><div class="s">IMDI-AE / 國際魔力者人材養成大學院</div></div>
+        <div class="r"><div class="k">위치</div><div class="v">가현시 외곽 · 결계 구역</div><div class="s">정문에서 본관까지 도보 10분</div></div>
+        <div class="r"><div class="k">운영 / 위탁</div><div class="v">ARKEN GROUP 위탁 운영</div><div class="s">인가된 17개 기관 중 한국 캠퍼스</div></div>
+        <div class="r"><div class="k">교복</div><div class="v">검정 울 코트 · 흰 셔츠 · 차콜 베스트 · 차콜 슬랙스</div><div class="s">넥타이 1흰 / 2회색 / 3차콜 / 4검정</div></div>
+        <div class="r"><div class="k">학년 구조</div><div class="v">1~4학년 · 계열별 분반</div><div class="s">학생회장은 흑독수리 엠블럼 패용</div></div>
+        <div class="r"><div class="k">학적</div><div class="v">계열 미측정 · 등급 미정으로 입학</div><div class="s">측정 이벤트 이후 확정</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="sec"><span class="idx">02</span><h3>캠퍼스 구역</h3><span class="en">Zones</span></div>
+      <div class="zones">
+        <div class="zone"><span class="tg">A</span><h4>A동 · 본관</h4><div class="sub">Admin / Lecture</div><ul><li>행정실 · 학원장실 · 교무회의실</li><li>마력 이론 · 공명학 강의동</li><li>연구동 (제한 출입)</li></ul></div>
+        <div class="zone"><span class="tg">B</span><h4>B동 · 훈련동</h4><div class="sub">Training / Barrier</div><ul><li>실기 훈련장 · 통제 훈련실</li><li>결계 제어실 · 대응 시뮬레이터</li><li style="color:var(--seal-2)">지하 LAB — 출입 통제</li></ul></div>
+        <div class="zone"><span class="tg">C</span><h4>C동 · 기숙사</h4><div class="sub">Dormitory</div><ul><li>생활관 · 라운지 · 자습실</li><li>식당 · 의무실 · 회복계 처치실</li><li>점호 06:30 / 소등 23:00</li></ul></div>
+        <div class="zone"><span class="tg">結</span><h4>외곽 결계</h4><div class="sub">Outer Barrier</div><ul><li>GREY MIST 차단 · 솔기 굴절 구간</li><li>야간 경비 당번 운용</li><li>정문 통과 기록 필수</li></ul></div>
+        <div class="zone"><span class="tg">市</span><h4>가현시</h4><div class="sub">Gahyeon City</div><ul><li>인가된 외출 구역 · 의료원 연계</li><li>편의 시설 · 보급</li><li>외박은 승인 필요</li></ul></div>
+        <div class="zone lock"><span class="tg">!</span><h4>지하 VENTA 지층</h4><div class="sub">Restricted</div><ul><li>매장량 세계 2위 추정</li><li>ARKEN 직할 · 접근 금지</li><li>문의 불가</li></ul></div>
+      </div>
+    </div>
+    <div class="card"><div class="sec"><span class="idx">03</span><h3>마력 지표</h3><span class="en">Indicators</span></div>
+      <div class="hud4">
+        <div class="b"><div class="g">▸ 출력</div><h5>OUTPUT</h5><p>단위 시간당 마력 방출량. 등급이 높을수록 상한이 큽니다.</p></div>
+        <div class="b"><div class="g">▸ 통제</div><h5>CONTROL</h5><p>폭주를 억제하는 능력. 낮으면 위험으로 분류됩니다.</p></div>
+        <div class="b"><div class="g">▸ 감염도</div><h5>GREY MIST</h5><p>안개 노출에 따른 변이 진행도. 초과 시 격리.</p></div>
+        <div class="b"><div class="g">◉ 공명</div><h5>RESONANCE</h5><p>자동 통역 안정도. ◉정상 / ◑불안정 / ○소실.</p></div>
+      </div>
+    </div>
+    <div class="card"><div class="sec"><span class="idx">04</span><h3>등급 · 계열</h3><span class="en">Grade</span></div>
+      <table><thead><tr><th>등급</th><th>분류</th><th>출력</th><th>통제</th><th>비고</th></tr></thead><tbody>
+        <tr><td>S</td><td>최상위</td><td>90+</td><td>80+</td><td>MRI 없이 의도 전달</td></tr>
+        <tr><td>A</td><td>상위</td><td>78~89</td><td>68~79</td><td>실전 운용</td></tr>
+        <tr><td>B</td><td>중위</td><td>60~77</td><td>55~67</td><td>보조 / 회복계 다수</td></tr>
+        <tr><td>C</td><td>초급</td><td>45~59</td><td>45~54</td><td>통제 훈련 집중</td></tr>
+        <tr><td>D</td><td>발현</td><td>30~44</td><td>40 내외</td><td>측정 직후 기본</td></tr>
+      </tbody></table>
+      <div class="note"><span class="lb">계열</span><p>번개 · 화염 · 치유 · 바람 · 공간 · 혼합 등으로 분류되며, 일부는 둘 이상이 혼합되어 발현됩니다. 입학 시점에는 미측정 상태로 표기됩니다.</p></div>
+    </div>
+    <div class="card"><div class="sec"><span class="idx">05</span><h3>주간 시간표</h3><span class="en">Timetable</span></div>
+      <table class="tt"><thead><tr><th>교시</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th></tr></thead><tbody>
+        <tr><td>1교시</td><td>마력 이론</td><td>결계학</td><td>실기 기초</td><td>변이체 대응</td><td>마력 이론</td></tr>
+        <tr><td>2교시</td><td>출력 통제</td><td>회복계 이론</td><td>공명학</td><td>실기 응용</td><td>결계학</td></tr>
+        <tr><td>3교시</td><td class="hi">계열 실기</td><td class="hi">계열 실기</td><td>통제 훈련</td><td>회복계 실습</td><td class="hi">계열 실기</td></tr>
+        <tr><td>4교시</td><td>VENTA 개론</td><td>변이체 대응</td><td>마력 이론</td><td>통제 훈련</td><td>종합 실기</td></tr>
+        <tr><td>5교시</td><td>자율 훈련</td><td>실기 보강</td><td>회복계 이론</td><td>자율 훈련</td><td class="hi">합동 훈련</td></tr>
+      </tbody></table>
+      <div class="note"><span class="lb">안내</span><p>본 시간표는 세계관 설정(마력 이론·결계·실기·통제·회복계·공명·VENTA·변이체 대응)을 바탕으로 한 예시 편성이며, 측정 주간·결계 점검·합동 훈련 등 일정에 따라 변경될 수 있습니다.</p></div>
+    </div>
+    <div class="card"><div class="sec"><span class="idx">06</span><h3>행사 안내</h3><span class="en">Events</span></div>
+      <div class="events">
+        <div class="ev"><div class="dt">3. 2.</div><div><h4>입학식</h4><ul><li>본관 강당 신입 원생 환영사.</li><li>학생회장 환영사 · 학원장 세계관 안내.</li></ul></div></div>
+        <div class="ev"><div class="dt">3. 3.–7.</div><div><h4>마력 측정 주간</h4><ul><li>계열·등급 확정. 직접 지정 또는 측정 선택.</li><li>측정 전 등급 비공개.</li></ul></div></div>
+        <div class="ev"><div class="dt">3. 20.</div><div><h4>변이체 대응 합동 훈련</h4><ul><li>전 원생 참여 모의 훈련.</li><li>회복계는 의무실 연계.</li></ul></div></div>
+        <div class="ev"><div class="dt">분기별</div><div><h4>ARKEN 정기 사찰</h4><ul><li>예고 없이 진행될 수 있음.</li><li>일부 원생 별도 면담 호출.</li></ul></div></div>
+      </div>
+      <div class="note"><span class="lb">기념일</span><p>한재이 1/13 · 르페브르 마엘 6/18 · 쿠로세 료 8/8 · 한도현 9/4 · 에른스트 뮐러 10/30 · 케일럽 하트 11/3. (에이벨의 생일은 기록되어 있지 않습니다.)</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OVERLAY: STUDENT ID ===== -->
+<div class="overlay" id="ov-id">
+  <div class="ov-top"><button class="vn-back" onclick="closeOverlay('id')"><span class="msym" style="font-size:18px;margin-right:2px">arrow_back</span>뒤로</button><span class="ttl">원생증 발급</span><span class="en">Student ID</span></div>
+  <div class="ov-wrap">
+    <div class="id-stage">
+      <div>
+        <canvas id="idCanvas" style="width:100%;height:auto;display:block;border-radius:14px;box-shadow:0 22px 50px -22px rgba(0,0,0,.8)"></canvas>
+        <p class="hint" style="margin-top:13px">※ 미리보기는 다운로드되는 PNG와 100% 동일합니다.</p>
+      </div>
+      <div class="id-form">
+        <div class="ttl">원생증 만들기</div>
+        <p class="ds">정보를 입력하면 즉시 반영됩니다. 운명을 시험해보고 싶다면, 주사위를 굴려 보세요.</p>
+        <div class="fld"><label>성명</label>
+          <div class="name-row">
+            <input type="text" id="inName" placeholder="이름" maxlength="12">
+            <button class="dice" id="diceBtn" onclick="rollID()" title="랜덤 — 계열·등급·능력치" aria-label="랜덤 돌리기">
+              <span class="msym">casino</span>
+            </button>
+          </div>
+        </div>
+        <div class="fld"><label>증명사진</label><button class="btn" onclick="document.getElementById('photoInput').click()">파일 선택</button><input type="file" id="photoInput" accept="image/*" style="display:none"></div>
+        <div class="fld"><label>계열</label><select id="inAff"><option value="미측정">미측정</option><option>불</option><option>물</option><option>바람</option><option>땅</option><option>번개</option><option>공간</option><option>치유</option><option>혼합</option></select></div>
+        <div class="fld two"><div><label>등급</label><select id="inGrade"><option value="?">미정 (?)</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option><option>F</option></select></div><div><label>학번</label><input type="text" id="inNo" placeholder="0000" maxlength="4"></div></div>
+        <div class="stat">
+          <div class="top"><span class="nm">출력</span><span class="vv"><span id="inOutN">60</span>%</span></div>
+          <p class="exp">마법이 센 정도. 높을수록 위력이 큽니다.</p>
+          <div class="slider" id="slOut" data-val="60"><div class="trk"></div><div class="fill"></div><div class="hd"></div></div>
+        </div>
+        <div class="stat">
+          <div class="top"><span class="nm">통제</span><span class="vv"><span id="inConN">55</span>%</span></div>
+          <p class="exp">폭주·오염을 억제하는 정도. 낮을수록 위험합니다.</p>
+          <div class="slider" id="slCon" data-val="55"><div class="trk"></div><div class="fill"></div><div class="hd"></div></div>
+        </div>
+        <div class="fld two"><div><label>입학 월</label><input type="number" id="inM" placeholder="03" min="1" max="12"></div><div><label>입학 일</label><input type="number" id="inD" placeholder="02" min="1" max="31"></div></div>
+        <button class="btn dl" onclick="downloadID()">원생증 PNG 다운로드</button>
+        <p class="hint">※ 사진은 브라우저 안에서만 처리되며 저장되지 않습니다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CONFIG — 교체 슬롯 (클플/도메인에 올린 URL을 여기에)
+   ========================================================= */
+const CONFIG = {
+  BGM_URL: "https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/nmu_main_bgm.mp3",                 // ← 로비 BGM (mp3/ogg) URL
+  TRANSITION_VIDEO_URL: "",    // ← 게이트 통과 굴절 트랜지션 영상 URL (없으면 CSS 굴절)
+  // 시나리오 BGM — 캐릭터별로 따로. 비우면 로비 BGM 유지. 'default'는 키 없는 캐릭터의 공통 폴백.
+  SCENARIO_BGM: {
+    default:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/nmu_main_bgm.mp3",
+    jay:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/jay_bgm.mp3", mael:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/lef_bgm.mp3", kurose:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/kur_bgm.mp3", caleb:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/cal_bgm.mp3", dohyun:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/doh_bgm.mp3", abel:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/abel_bgm.mp3", ernst:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/ern_bgm.mp3"
+  },
+  // 효과음: URL 넣으면 그 파일 재생, 비우면 코드 합성음 사용
+  SFX: { gate:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/gate.mp3", click:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/click.mp3", swipe:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/swipe.mp3", type:"" },
+  // 캐릭터별 9:16 영상 URL (없으면 placeholder 플레이트)
+  VIDEOS: { jay:"", mael:"", kurose:"", caleb:"", dohyun:"", abel:"", ernst:"" },
+  // 시나리오 컷별 배경 영상 URL (키: 캐릭터키, 값: [컷1,컷2,...]). 없으면 placeholder
+  SCENARIO_VIDEOS: {
+    jay:    ["","","",""],
+    mael:   ["","","",""],
+    kurose: ["","","",""],
+    caleb:  ["","","",""],
+    dohyun: ["","","",""],
+    abel:   ["","","",""],
+    ernst:  ["","","",""]
+  }
+};
+
+/* ===== 캐릭터 데이터 ===== */
+const CHARS = [
+  {key:'jay',    name:'한재이',        aff:'번개',   grade:'S', nat:'KR', out:92, accent:'#7fa9d4', glow:'rgba(127,169,212,.32)', scenario:true},
+  {key:'mael',   name:'르페브르 마엘', aff:'치유',   grade:'A', nat:'BE', out:80, accent:'#cdbb88', glow:'rgba(205,187,136,.28)', scenario:true},
+  {key:'kurose', name:'쿠로세 료',     aff:'불',     grade:'A', nat:'JP', out:81, accent:'#cf7a47', glow:'rgba(207,122,71,.28)', scenario:true},
+  {key:'caleb',  name:'케일럽 하트',   aff:'번개·불',grade:'A', nat:'US', out:83, accent:'#6f86d6', glow:'rgba(150,130,210,.30)', scenario:true},
+  {key:'dohyun', name:'한도현',        aff:'바람',   grade:'B', nat:'KR', out:64, accent:'#86b48d', glow:'rgba(134,180,141,.28)', scenario:true},
+  {key:'abel',   name:'에이벨',        aff:'치유',   grade:'?', nat:'—',  out:null, accent:'#a3c9d2', glow:'rgba(163,201,210,.32)', scenario:true},
+  {key:'ernst',  name:'에른스트 뮐러', aff:'공간',   grade:'A', nat:'DE', out:79, accent:'#aab3bc', glow:'rgba(170,179,188,.26)', scenario:true},
+];
+const NAT = {KR:'한국',JP:'일본',US:'미국',DE:'독일',BE:'벨기에','—':'미상'};
+
+/* ===== 사운드 엔진 (Web Audio 합성 + URL 슬롯) ===== */
+let AC=null;
+function actx(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC;}
+const sfxBuf={};
+function playSfx(kind){
+  const url=CONFIG.SFX&&CONFIG.SFX[kind];
+  if(url){ if(!sfxBuf[kind]){sfxBuf[kind]=new Audio(url);} const a=sfxBuf[kind].cloneNode();a.volume=.6;a.play().catch(()=>{}); return; }
+  const a=actx();if(!a)return;const t=a.currentTime;
+  if(kind==='gate'){ // 피아노풍 중~높은 음 "띵" (기음+배음)
+    const freq=659.25; // E5
+    [[1,0.09],[2,0.035],[3,0.018],[4,0.008]].forEach(([mul,amp])=>{
+      const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=freq*mul;
+      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(amp,t+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t+1.4);
+      o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+1.5);
+    });
+  } else if(kind==='click'){ // 마우스 "찰칵" — 짧은 노이즈 더블 클릭
+    [0,0.045].forEach((dt,i)=>{
+      const dur=0.012,buf=a.createBuffer(1,a.sampleRate*dur,a.sampleRate),d=buf.getChannelData(0);
+      for(let k=0;k<d.length;k++)d[k]=(Math.random()*2-1)*Math.pow(1-k/d.length,2.5);
+      const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=i?2600:2000;f.Q.value=1.4;
+      const g=a.createGain();g.gain.setValueAtTime(i?0.16:0.22,t+dt);g.gain.exponentialRampToValueAtTime(0.0001,t+dt+dur);
+      s.connect(f);f.connect(g);g.connect(a.destination);s.start(t+dt);s.stop(t+dt+dur);
+    });
+  } else if(kind==='type'){ // 키보드 타닥
+    const dur=0.03,buf=a.createBuffer(1,a.sampleRate*dur,a.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+    const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='highpass';f.frequency.value=1800;
+    const g=a.createGain();g.gain.setValueAtTime(0.14,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);s.stop(t+dur);
+  } else if(kind==='swipe'){ // 캐릭터 넘김 — 부드러운 "휙" (필터 스윕 노이즈)
+    const dur=0.16,buf=a.createBuffer(1,a.sampleRate*dur,a.sampleRate),d=buf.getChannelData(0);
+    for(let k=0;k<d.length;k++)d[k]=(Math.random()*2-1)*Math.pow(1-k/d.length,1.6);
+    const s=a.createBufferSource();s.buffer=buf;
+    const f=a.createBiquadFilter();f.type='bandpass';f.Q.value=.9;
+    f.frequency.setValueAtTime(700,t);f.frequency.exponentialRampToValueAtTime(2600,t+dur);
+    const g=a.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.12,t+0.03);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);s.stop(t+dur);
+  }
+}
+
+/* ===== 한재이 시나리오 대본 (4컷 · 1인칭 나레이션 + 재이 교차) ===== */
+const SCENARIOS = {
+  jay: [
+    {bg:'불타는 본가의 밤', cut:'CUT 1 / 12세, 각성', turns:[
+      {s:'narr', t:'그날 밤, 나는 무언가 무너지는 소리에 잠에서 깼다.'},
+      {s:'narr', t:'천장이 붉었다. 눈을 부볐지만, 붉음은 사라지지 않았다.'},
+      {s:'한재이', t:'…이게 무슨, 탄 냄새지.'},
+      {s:'narr', t:'손끝이 저릿했다. 내 안에서 무언가가 처음으로 깨어나고 있었다.'},
+      {s:'한재이', t:'도현아. 도현아, 일어나. 지금.'},
+    ]},
+    {bg:'재만 남은 자리', cut:'CUT 2 / 아버지', turns:[
+      {s:'narr', t:'불이 꺼졌을 때, 집이 있던 자리에는 재만 남아 있었다.'},
+      {s:'narr', t:'아버지는 끝내 그 안에서 나오지 못했다.'},
+      {s:'한재이', t:'…내가, 늦었어.'},
+      {s:'narr', t:'열두 살의 나는 그제야 알았다. 처음 깨어난 힘은, 누구도 구하지 못한다는 걸.'},
+    ]},
+    {bg:'검은 양복과 계약서', cut:'CUT 3 / ARKEN', turns:[
+      {s:'narr', t:'장례가 끝나기도 전에, 검은 양복의 사람들이 찾아왔다. 종이 한 장을 내밀면서.'},
+      {s:'narr', t:'"동생의 치료비를, 저희가 전부 부담하겠습니다." 그렇게 말했다.'},
+      {s:'narr', t:'대가는 적혀 있지 않았다. 적히지 않은 것이 늘 가장 비쌌다.'},
+      {s:'한재이', t:'…서명할게요. 동생만, 살릴 수 있다면.'},
+    ]},
+    {bg:'동생을 안은 손끝', cut:'CUT 4 / 지금', turns:[
+      {s:'narr', t:'그렇게 나는 이곳의 학생이 되었고, 동시에 감시자가 되었다.'},
+      {s:'narr', t:'품 안에서 잠든 동생의 머리카락이, 옅은 정전기에 곤두섰다.'},
+      {s:'한재이', t:'…이번엔, 안 늦어.'},
+      {s:'narr', t:'손끝의 저릿함을, 나는 더 이상 두려워하지 않기로 했다.'},
+    ]},
+  ],
+  mael: [
+    {bg:'소독된 흰 복도', cut:'CUT 1 / ARKEN LAB', turns:[
+      {s:'narr', t:'그곳의 복도는 언제나 같은 온도였다. 너무 깨끗해서, 무엇을 지우고 있는지 알 수 있는 청결이었다.'},
+      {s:'narr', t:'나는 회복계 연구원이었다. 부서진 것을 꿰매는 일이라고, 한동안은 그렇게 믿었다.'},
+      {s:'르페브르 마엘', t:'오늘 자 표본 데이터입니다. …늘 그렇듯, 이상 없네요.'},
+      {s:'narr', t:'이상이 없다는 말은, 이상을 보지 않기로 했다는 말과 자주 같은 얼굴을 했다.'},
+    ]},
+    {bg:'알파벳순 명단', cut:'CUT 2 / 한 줄의 이름', turns:[
+      {s:'narr', t:'명단은 알파벳순이었고, 나는 그 정확함을 신뢰했다. 그날까지는.'},
+      {s:'narr', t:'익숙한 철자가 실험 대상 칸에 있었다. 학창 시절 같은 강의실에서 웃던 사람의 이름이었다.'},
+      {s:'르페브르 마엘', t:'…이건, 분류가 잘못된 것 같은데요.'},
+      {s:'narr', t:'아무도 대답하지 않았다. 잘못된 것은 분류가 아니라, 의심하지 않은 나의 지난 몇 해였다.'},
+    ]},
+    {bg:'복제된 데이터', cut:'CUT 3 / 이탈', turns:[
+      {s:'narr', t:'데이터를 복제했다. 손은 떨리지 않았다. 떨릴 자격이 없다고 생각했으니까.'},
+      {s:'narr', t:'문을 나서던 밤, 그 이름은 끝내 지워지지 못했다. 내게 남은 건 종이 몇 장과, 비어 버린 한 자리뿐이었다.'},
+      {s:'르페브르 마엘', t:'…미안합니다. 이번에도, 제가 늦었네요.'},
+      {s:'narr', t:'농담을 잘하는 사람이 되기로 한 건 그 무렵부터였다. 웃지 않으면, 빈자리가 너무 또렷했으므로.'},
+    ]},
+    {bg:'백금빛 의무실', cut:'CUT 4 / 지금', turns:[
+      {s:'narr', t:'지금 나는 어느 학원의 의무실에 있다. 소독약 냄새가 백금빛 햇살에 절여진, 평범한 척하는 방이다.'},
+      {s:'narr', t:'학생들은 내가 부상을 잘 봉합한다고만 안다. 서랍 안쪽이 무엇을 향해 열려 있는지는 모른 채로.'},
+      {s:'르페브르 마엘', t:'다친 데를 보여 주시겠어요. …농담은, 치료가 끝난 뒤에 하죠.'},
+      {s:'narr', t:'입꼬리는 올라가고 눈은 웃지 않는 얼굴로, 나는 오늘도 비어 있는 한 자리를 채우지 못한 채 손을 씻는다.'},
+    ]},
+  ],
+  kurose: [
+    {bg:'VENTA 발전소', cut:'CUT 1 / 부친', turns:[
+      {s:'narr', t:'아버지는 발전소에서 일했다. VENTA를 정제하는, 빛이 너무 많은 곳에서.'},
+      {s:'narr', t:'그날의 사이렌을 아직 몸으로 듣는다. 귀가 아니라, 오른팔이 먼저 떨리는 식으로.'},
+      {s:'쿠로세 료', t:'…돌아온다고 했잖아. 분명히, 그렇게 말했잖아.'},
+      {s:'narr', t:'용해. 사람을 설명해서는 안 되는 그 단어가, 그날 처음 아버지 이름 옆에 붙었다.'},
+    ]},
+    {bg:'처음 솟은 불', cut:'CUT 2 / 화상', turns:[
+      {s:'narr', t:'슬픔이 깊어지면 몸 안에서 무언가가 타오른다는 걸, 그때 처음 알았다.'},
+      {s:'narr', t:'처음 솟은 불은 통제를 몰랐다. 정신을 차렸을 때, 오른 팔뚝엔 내가 낸 흉터가 남아 있었다.'},
+      {s:'쿠로세 료', t:'…딱 좋네. 잊지 말라고, 새겨진 거겠지.'},
+      {s:'narr', t:'그 자국은 내가 나를 용서하지 못한 시간의 길이를 정확히 기록하는, 눈금이 되었다.'},
+    ]},
+    {bg:'약에 기댄 밤', cut:'CUT 3 / 족쇄', turns:[
+      {s:'narr', t:'어머니는 그 후로 약 없이는 잠들지 못했다. ARKEN이 만든, ARKEN만 줄 수 있는 약이었다.'},
+      {s:'narr', t:'나는 그들을 증오한다. 그리고 매달 손을 내민다. 증오와 의존이 같은 손바닥 위에 놓이는 일에도, 사람은 익숙해진다.'},
+      {s:'쿠로세 료', t:'…어머니만 괜찮으면 돼. 나머지는, 그래서 뭐.'},
+      {s:'narr', t:'그렇게 증오하는 곳의 학생이 되었다. 발은 묶이고, 손끝만 뜨거운 채로.'},
+    ]},
+    {bg:'유품 라이터', cut:'CUT 4 / 지금', turns:[
+      {s:'narr', t:'주머니엔 늘 아버지의 라이터가 있다. 불은 이미 내 안에 있는데도, 자꾸 부싯돌을 굴린다.'},
+      {s:'narr', t:'짜증이 솟을 때마다 손가락이 먼저 그것을 찾는다. 남겨진 온기를 확인하려는 것처럼.'},
+      {s:'쿠로세 료', t:'…내가 정한 사람은, 안 버려. 그게 다야.'},
+      {s:'narr', t:'거칠게 말하고 돌아서지만, 발은 늘 한 걸음 늦게 떨어진다. 지킨다는 말을, 나는 손과 발로만 할 줄 안다.'},
+    ]},
+  ],
+  caleb: [
+    {bg:'미국 양성소 훈련장', cut:'CUT 1 / 맨 앞줄', turns:[
+      {s:'narr', t:'미국에서 나는 늘 맨 앞줄이었다. 번개와 불을 한 손에 쥔 녀석은, 흔치 않았으니까.'},
+      {s:'narr', t:'표적은 내 앞에서 가장 빨리 무너졌고, 교관들은 그걸 재능이라 불렀다.'},
+      {s:'케일럽 하트', t:'봤지? 이 정도는 돼야 A급이라고 하는 거잖아.'},
+      {s:'narr', t:'시스템이 나를 사랑한다고 믿었다. 가장 잘하는 아이를 사랑하지 않을 이유가, 없으니까.'},
+    ]},
+    {bg:'한 장의 통지서', cut:'CUT 2 / 교환생', turns:[
+      {s:'narr', t:'어느 날 통지서가 왔다. 한국 캠퍼스로의 우수 교환생 파견. 결원 자리에 가장 좋은 카드를 보낸다고 했다.'},
+      {s:'narr', t:'영광인 줄로만 알았다. 평가서 뒷장의 다른 글씨는, 읽어 볼 생각도 못 했다.'},
+      {s:'케일럽 하트', t:'한국? 좋지. 어디든 가장 센 놈이 있는 곳이 내 자리니까.'},
+      {s:'narr', t:'짐을 싸는 손이 가벼웠다. 가벼움이 늘 좋은 신호는 아니라는 걸, 그때는 몰랐다.'},
+    ]},
+    {bg:'낯선 캠퍼스', cut:'CUT 3 / 라이벌', turns:[
+      {s:'narr', t:'처음 들은 이름은 한재이였다. 학생회장, S급, 모두가 한 박자 낮춰 말하는 이름.'},
+      {s:'narr', t:'그 무표정을 보는 순간 익숙한 열이 올라왔다. 이길 상대가 있다는 건, 살아 있다는 가장 확실한 증거였다.'},
+      {s:'케일럽 하트', t:'S급이라고? 잘됐네. 넘어설 게 있어야 재미있지.'},
+      {s:'narr', t:'그가 나와 같은 시스템의 다른 얼굴이라는 걸, 그때는 짐작조차 못 했다.'},
+    ]},
+    {bg:'가장 앞줄', cut:'CUT 4 / 지금', turns:[
+      {s:'narr', t:'지금도 가장 앞줄에 서 있다. 웃고, 떠들고, 라이벌을 도발하면서.'},
+      {s:'narr', t:'이 활기가 무엇 위에 세워졌는지 묻지 않는다. 묻는 순간 흔들릴 것 같아, 더 크게 웃는다.'},
+      {s:'케일럽 하트', t:'긴장 풀어. 어차피 다 잘될 거니까. …늘 그래 왔잖아?'},
+      {s:'narr', t:'늘 그래 왔다는 말끝이, 아주 가끔 혼자 있을 때만 작게 떨린다는 건, 아무에게도 말하지 않았다.'},
+    ]},
+  ],
+  dohyun: [
+    {bg:'불타던 아홉 살', cut:'CUT 1 / 형의 등', turns:[
+      {s:'narr', t:'아홉 살의 밤을 냄새로 기억한다. 탄 나무와, 형의 등에서 나던 정전기 냄새로.'},
+      {s:'narr', t:'형이 나를 안고 뛰었다. 그 팔이 너무 뜨거워서, 울지도 못했다.'},
+      {s:'한도현', t:'형… 형, 팔이 아파. 형, 왜 그래….'},
+      {s:'narr', t:'불이 꺼졌을 때 왼팔엔 그날의 열기가 흉터로 남았다. 형의 눈에는, 그보다 더 깊은 무언가가 남았고.'},
+    ]},
+    {bg:'한 걸음의 거리', cut:'CUT 2 / 결핍', turns:[
+      {s:'narr', t:'그 후로 형은 자꾸 한 걸음 물러섰다. 다정하지 않아서가 아니라, 다정할수록 멀어지는 사람이라는 걸 한참 뒤에야 알았다.'},
+      {s:'narr', t:'형의 인정을 원했다. 강해지면 한 번쯤은 돌아봐 줄 것 같아서.'},
+      {s:'한도현', t:'…나도 곧 형 따라잡거든? 흥, 두고 봐.'},
+      {s:'narr', t:'허세는 결핍이 입는 옷이었다. 나는 그 옷을, 점점 두껍게 껴입었다.'},
+    ]},
+    {bg:'가현시의 흰 방', cut:'CUT 3 / 치료제', turns:[
+      {s:'narr', t:'한 달에 한 번 가현시의 흰 방으로 약을 받으러 간다. 늘 같은 벽지, 같은 그림자가 같은 시각에 드리우는 곳이다.'},
+      {s:'narr', t:'형이 내 약값을 위해 무엇을 치르는지, 그때는 알지 못했다. 알았다면 그렇게 함부로 비뚤어지진 못했을 텐데.'},
+      {s:'한도현', t:'이런 약, 나 아니어도 다들 먹는 거거든. …별거 아니라고.'},
+      {s:'narr', t:'별거 아니라고 말할수록 그것이 별것이 되어 간다는 걸, 끝내 인정하지 않았다.'},
+    ]},
+    {bg:'감춘 자줏빛', cut:'CUT 4 / 지금', turns:[
+      {s:'narr', t:'지금도 형 앞에서 가장 큰소리를 친다. 인정받지 못한다고 믿는 만큼, 더 크게.'},
+      {s:'narr', t:'흥분하면 왼팔 흉터가 자줏빛으로 떠오른다. 황급히 소매 안으로 감춘다. 자존심이, 흉터보다 먼저 아프니까.'},
+      {s:'한도현', t:'착각하지 마. 나 너 신경 안 쓰거든? …그, 그냥 지나가다 본 거야.'},
+      {s:'narr', t:'쏘아붙이고 돌아서지만 손끝은 늘 떨린다. 솔직한 마음은 끝까지 부정하는 게, 내 방식이라서.'},
+    ]},
+  ],
+  abel: [
+    {bg:'이름 없는 빛', cut:'CUT 1 / 깨어남', turns:[
+      {s:'narr', t:'나의 시작을 나는 알지 못합니다. 어느 순간 이미 빛을 보고 있었고, 그 빛이 나인지 바깥인지조차 구분되지 않았습니다.'},
+      {s:'narr', t:'사람들은 저마다 어디서 왔는지를 압니다. 나만이, 그 평범한 사실 하나를 갖고 있지 않습니다.'},
+      {s:'에이벨', t:'…안녕하세요. 제가, 여기 있어도, 괜찮은 걸까요.'},
+      {s:'narr', t:'처음 배운 말이 인사였습니다. 머무름의 허락을 구하는 일이, 나에게는 가장 먼저 필요했으므로.'},
+    ]},
+    {bg:'타인의 윤곽', cut:'CUT 2 / 이해', turns:[
+      {s:'narr', t:'이상하게도 다른 사람의 마음은 전부 보였습니다. 두려움도, 욕망도, 서로 어긋난 모순까지도.'},
+      {s:'narr', t:'누군가 슬픔을 감출 때 나는 그 윤곽을 먼저 만졌습니다. 그러면 그 사람의 가슴께가, 옅게 따뜻해지곤 했습니다.'},
+      {s:'에이벨', t:'당신은, 지금 무섭군요. …괜찮습니다. 그 마음은, 제가 압니다.'},
+      {s:'narr', t:'모두의 안을 읽으면서, 정작 나 자신의 안만은 텅 비어 있다는 걸 오래 알아채지 못했습니다.'},
+    ]},
+    {bg:'알지 못할 말', cut:'CUT 3 / 누설', turns:[
+      {s:'narr', t:'가끔 나는 알지 못할 말을 합니다. 묻지도 않은 것을, 이미 아는 사람처럼.'},
+      {s:'에이벨', t:'VENTA요? 그건… 원래, 있었잖아요. …어라, 제가, 왜 이런 말을.'},
+      {s:'narr', t:'말을 뱉고 나서야 당황합니다. 내가 어떻게 그것을 아는지, 나조차 설명하지 못하니까.'},
+      {s:'narr', t:'내 정체에 가까워질수록 마음은 어린아이처럼 천진한 곳으로 가라앉았습니다. 마치, 알아서는 안 된다는 듯이.'},
+    ]},
+    {bg:'비워 둔 방', cut:'CUT 4 / 지금', turns:[
+      {s:'narr', t:'이곳 지하엔 나를 위해 비워 둔 방이 있다고 합니다. 누군가 나를 도로 거두어 가려 한다는 걸, 어렴풋이 느낍니다.'},
+      {s:'narr', t:'그러나 두렵지는 않습니다. 두려움이 무엇인지는 알지만, 그것을 내 것으로 느끼는 법은 아직 배우지 못했으니까.'},
+      {s:'에이벨', t:'저는, 여기 조금 더 있고 싶습니다. …이런 마음을, 욕심이라고 부르는 게, 맞을까요.'},
+      {s:'narr', t:'반투명한 손끝으로 햇빛을 만지면 빛이 옅게 굴절합니다. 나라는 것이 무엇인지는 몰라도, 그 굴절만은 분명히 아름답다고, 처음으로 그렇게 느꼈습니다.'},
+    ]},
+  ],
+  ernst: [
+    {bg:'지워진 경로', cut:'CUT 1 / 추적', turns:[
+      {s:'narr', t:'독일에서 나는 선을 쫓는 일을 했다. 자원이 어디서 와서 어디로 사라지는지, 그 보이지 않는 경로를.'},
+      {s:'narr', t:'공간을 다루는 자에게 세계는 늘 어긋난 좌표들의 집합으로 보인다. 그 어긋남의 끝에 무엇이 있는지, 알고 싶었다.'},
+      {s:'에른스트 뮐러', t:'…여기서 끊긴다. 누군가 일부러 지운 자리야.'},
+      {s:'narr', t:'지워진 자리는 늘 무언가를 말하고 있었다. 침묵이, 가장 큰 소리로.'},
+    ]},
+    {bg:'발각된 밤', cut:'CUT 2 / 삼킨 말', turns:[
+      {s:'narr', t:'경로의 끝에는 ARKEN이 있었다. 그들은 자신을 들여다보는 시선을 오래 두고 보는 조직이 아니었다.'},
+      {s:'narr', t:'발각된 밤, 나는 많은 것을 알고 있었고, 그 대부분을 말하지 않기로 결정했다.'},
+      {s:'에른스트 뮐러', t:'…아니. 본 것은, 없어.'},
+      {s:'narr', t:'입술 오른쪽 아래의 점이 한 박자 떨렸다. 거짓을 삼킬 때마다 그 자리가 먼저 알아챈다는 걸, 나만은 알고 있었다.'},
+    ]},
+    {bg:'어긋난 격자', cut:'CUT 3 / 이송', turns:[
+      {s:'narr', t:'그들은 나를 처분하는 대신 한 학원으로 보냈다. 가둔다기보다, 어긋난 좌표 하나를 익숙한 격자 안으로 옮겨 둔 것에 가까웠다.'},
+      {s:'narr', t:'정했다. 누구의 편도 들지 않기로. 개입하지 않는 자는, 적어도 아무것도 더 망가뜨리지 않으니까.'},
+      {s:'에른스트 뮐러', t:'…관여하지 않아. 나는, 보기만 한다.'},
+      {s:'narr', t:'공간을 격리하면 그 안에서는 시계의 추마저 박자가 어긋난다. 그 어긋난 정적 안에 나를 두고, 세상을 한 발 물러서서 바라보았다.'},
+    ]},
+    {bg:'잿빛 은의 거리', cut:'CUT 4 / 지금', turns:[
+      {s:'narr', t:'지금 나는 어느 격자의 가장자리에 서 있다. 관찰자로, 잿빛 은처럼 차가운 거리로.'},
+      {s:'narr', t:'그런데 한 사람 앞에서만 그 거리가 자꾸 어긋난다. 분석하려 들수록, 좌표가 더 흐트러진다.'},
+      {s:'에른스트 뮐러', t:'…너는, 왜 자꾸. …아니. 틀렸어. 아무것도 아니야.'},
+      {s:'narr', t:'비개입을 원칙으로 삼은 내가, 처음으로 한 발 다가서고 싶어진다는 것. 그것이 무엇을 무너뜨릴 분기점인지, 나는 아직 계산하지 못했다.'},
+    ]},
+  ],
+};
+
+/* ===== custom cursor ===== */
+const fine = matchMedia('(pointer:fine)').matches;
+if(fine){
+  const cur=document.getElementById('cur'), ring=document.getElementById('curRing');
+  let rx=0,ry=0,cx=0,cy=0;
+  addEventListener('mousemove',e=>{cur.style.transform=`translate(${e.clientX}px,${e.clientY}px) translate(-50%,-50%)`;rx=e.clientX;ry=e.clientY;});
+  (function loop(){cx+=(rx-cx)*.18;cy+=(ry-cy)*.18;ring.style.transform=`translate(${cx}px,${cy}px) translate(-50%,-50%)`;requestAnimationFrame(loop);})();
+  addEventListener('mousedown',e=>{
+    cur.textContent='✦';ring.style.width='16px';ring.style.height='16px';
+    const sp=document.createElement('div');sp.className='spark';sp.textContent='✦';sp.style.left=e.clientX+'px';sp.style.top=e.clientY+'px';sp.style.fontSize='18px';
+    document.body.appendChild(sp);setTimeout(()=>sp.remove(),500);
+  });
+  addEventListener('mouseup',()=>{cur.textContent='▸';ring.style.width='26px';ring.style.height='26px';});
+}else{document.body.classList.remove('hide-cursor');}
+
+/* ===== build plates ===== */
+const track=document.getElementById('track');
+CHARS.forEach((c,i)=>{
+  const vid=CONFIG.VIDEOS[c.key];
+  const el=document.createElement('div');
+  el.className='plate';el.dataset.i=i;
+  el.style.setProperty('--a',c.accent);el.style.setProperty('--g',c.glow);
+  el.innerHTML=`
+    <div class="glow"></div>
+    ${vid?`<video src="${vid}" muted loop playsinline preload="metadata"></video>`:`<div class="figure"><svg><use href="#bust"/></svg></div>`}
+    <div class="nameplate">
+      <div class="nm">${c.name}</div>
+      <div class="meta"><span>${c.aff}</span><span class="dot">·</span><span>${c.grade}급</span><span class="dot">·</span><span>${NAT[c.nat]}</span></div>
+      <div class="ul"></div>
+    </div>
+    <div class="tapcue">${c.scenario?'TAP — 과거사 감상':'시나리오 준비 중'}</div>`;
+  track.appendChild(el);
+});
+const plates=[...document.querySelectorAll('.plate')];
+
+/* dots */
+const dotsEl=document.getElementById('dots');
+CHARS.forEach((c,i)=>{const d=document.createElement('div');d.className='d';d.onclick=()=>{playSfx('swipe');setIndex(i);};dotsEl.appendChild(d);});
+const dots=[...dotsEl.children];
+
+/* ===== carousel ===== */
+let index=0;
+function layout(){
+  const stage=document.getElementById('stage');
+  const sw=stage.clientWidth;
+  const isLand=matchMedia('(orientation:landscape)').matches;
+  const pw=isLand?Math.min(sw*0.5,520):Math.min(sw*0.82,440);
+  plates.forEach(p=>p.style.width=pw+'px');
+  positionTrack();
+}
+function positionTrack(){
+  const stage=document.getElementById('stage');
+  const active=plates[index];
+  const center=stage.clientWidth/2;
+  curBase=center-(active.offsetLeft+active.offsetWidth/2);
+  track.style.transform=`translateX(${curBase}px)`;
+}
+function setIndex(i){
+  index=(i+CHARS.length)%CHARS.length;
+  plates.forEach((p,k)=>p.classList.toggle('active',k===index));
+  dots.forEach((d,k)=>d.classList.toggle('on',k===index));
+  positionTrack();updateHUD();playActiveVideo();
+}
+function updateHUD(){
+  const c=CHARS[index];
+  document.documentElement.style.setProperty('--glow',c.glow);
+  document.documentElement.style.setProperty('--a',c.accent);
+  document.getElementById('hAff').textContent=`${c.aff} · ${c.grade}`;
+  const out=c.out==null?'??':c.out+'%';
+  document.getElementById('hOut').textContent=out;
+  document.getElementById('hOutBar').style.width=(c.out||0)+'%';
+}
+function playActiveVideo(){
+  plates.forEach((p,k)=>{const v=p.querySelector('video');if(!v)return;if(k===index){v.play().catch(()=>{});}else{v.pause();v.currentTime=0;}});
+}
+document.getElementById('prev').onclick=()=>{playSfx('swipe');setIndex(index-1);};
+document.getElementById('next').onclick=()=>{playSfx('swipe');setIndex(index+1);};
+
+/* hover play (영상 있을 때만 의미) */
+plates.forEach((p,k)=>{
+  p.addEventListener('mouseenter',()=>{if(k===index){const v=p.querySelector('video');if(v)v.play().catch(()=>{});}});
+});
+
+/* drag / swipe */
+let down=false,sx=0,moved=0,curBase=0;
+const stageEl=document.getElementById('stage');
+function ptDown(x){down=true;sx=x;moved=0;track.classList.add('drag');}
+function ptMove(x){if(!down)return;moved=x-sx;track.style.transform=`translateX(${curBase+moved}px)`;}
+function ptUp(){if(!down)return;down=false;track.classList.remove('drag');
+  const th=Math.min(80,stageEl.clientWidth*0.12);
+  if(Math.abs(moved)>th){playSfx('swipe');setIndex(index+(moved<0?1:-1));}
+  else if(Math.abs(moved)<8){ // tap on active → scenario
+    const c=CHARS[index];
+    if(c.scenario){playSfx('click');openScenario(c.key);}else{positionTrack();toast('해당 캐릭터의 시나리오는 준비 중입니다.');}
+  }
+  else{positionTrack();} // 임계 미달 → 원위치 스냅
+}
+stageEl.addEventListener('mousedown',e=>ptDown(e.clientX));
+addEventListener('mousemove',e=>ptMove(e.clientX));
+addEventListener('mouseup',ptUp);
+stageEl.addEventListener('touchstart',e=>ptDown(e.touches[0].clientX),{passive:true});
+stageEl.addEventListener('touchmove',e=>ptMove(e.touches[0].clientX),{passive:true});
+stageEl.addEventListener('touchend',ptUp);
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft')setIndex(index-1);if(e.key==='ArrowRight')setIndex(index+1);});
+
+addEventListener('resize',layout);
+
+/* ===== gate ===== */
+const bgm=new Audio();const scBgm=new Audio();let bgmOn=false;
+document.getElementById('enterBtn').onclick=()=>{
+  actx();playSfx('gate');
+  const tr=document.getElementById('transition');
+  const tv=document.getElementById('transVideo');
+  if(CONFIG.TRANSITION_VIDEO_URL){tv.src=CONFIG.TRANSITION_VIDEO_URL;tv.play().catch(()=>{});}
+  tr.classList.add('flash');
+  document.getElementById('gate').classList.add('gone');
+  setTimeout(()=>{document.getElementById('lobby').classList.add('on');layout();setIndex(0);},650);
+  setTimeout(()=>tr.classList.remove('flash'),1100);
+  if(CONFIG.BGM_URL){bgm.src=CONFIG.BGM_URL;bgm.loop=true;bgm.volume=.55;bgm.play().then(()=>{bgmOn=true;}).catch(()=>{});}
+};
+
+/* ===== scenario ===== */
+let scKey=null,scCut=0,scTurn=0,typing=false,typeTimer=null,fullLine='';
+function openScenario(key){
+  scKey=key;scCut=0;scTurn=0;
+  const sc=document.getElementById('scenario');sc.classList.add('on');
+  const cuts=SCENARIOS[key];
+  const cutsEl=document.getElementById('vnCuts');cutsEl.innerHTML='';
+  cuts.forEach(()=>{const c=document.createElement('div');c.className='c';cutsEl.appendChild(c);});
+  const scBgmUrl=(CONFIG.SCENARIO_BGM&&(CONFIG.SCENARIO_BGM[key]||CONFIG.SCENARIO_BGM.default))||"";
+  if(scBgmUrl){if(!bgm.paused)bgm.pause();scBgm.src=scBgmUrl;scBgm.loop=true;scBgm.volume=.5;scBgm.play().catch(()=>{});}
+  renderCut();
+}
+function renderCut(){
+  const cut=SCENARIOS[scKey][scCut];
+  document.getElementById('cgLabel').textContent=cut.bg;
+  document.getElementById('cgCut').textContent=cut.cut;
+  [...document.getElementById('vnCuts').children].forEach((c,k)=>c.classList.toggle('on',k<=scCut));
+  const c=CHARS.find(x=>x.key===scKey);
+  document.getElementById('scenario').style.setProperty('--accent',c.accent);
+  const vurl=(CONFIG.SCENARIO_VIDEOS[scKey]||[])[scCut];
+  const cgv=document.getElementById('cgVideo'),ph=document.getElementById('cgPh');
+  if(vurl){cgv.src=vurl;cgv.style.display='block';cgv.play().catch(()=>{});ph.style.display='none';document.getElementById('cg').style.background='#06080c';}
+  else{cgv.pause();cgv.removeAttribute('src');cgv.style.display='none';ph.style.display='flex';
+    document.getElementById('cg').style.background=`radial-gradient(120% 80% at 50% 30%, ${c.glow}, transparent 60%), linear-gradient(180deg,#0a0d12,#06080c)`;}
+  renderTurn();
+}
+function typeLine(text){
+  const ln=document.getElementById('vnLine');clearInterval(typeTimer);
+  fullLine=text;typing=true;ln.textContent='';let i=0;
+  typeTimer=setInterval(()=>{
+    ln.textContent=text.slice(0,++i);
+    if(i%2===0)playSfx('type');
+    if(i>=text.length){clearInterval(typeTimer);typing=false;}
+  },28);
+}
+function finishLine(){clearInterval(typeTimer);typing=false;document.getElementById('vnLine').textContent=fullLine;}
+function renderTurn(){
+  const turn=SCENARIOS[scKey][scCut].turns[scTurn];
+  const sp=document.getElementById('vnSpeaker');
+  if(turn.s==='narr'){sp.textContent='';sp.className='speaker narr';sp.style.display='none';}
+  else{sp.textContent=turn.s;sp.className='speaker';sp.style.display='block';}
+  typeLine(turn.t);
+  const last=scCut===SCENARIOS[scKey].length-1 && scTurn===SCENARIOS[scKey][scCut].turns.length-1;
+  document.getElementById('vnNext').textContent=last?'끝':'다음';
+}
+function advanceScenario(e){
+  if(e&&e.target.closest&&e.target.closest('.vn-back'))return; // 뒤로 버튼 제외
+  if(typing){finishLine();return;} // 타이핑 중이면 즉시 완성
+  playSfx('click');
+  const cuts=SCENARIOS[scKey];
+  if(scTurn<cuts[scCut].turns.length-1){scTurn++;renderTurn();}
+  else if(scCut<cuts.length-1){scCut++;scTurn=0;
+    const cg=document.getElementById('cg');cg.style.opacity=0;setTimeout(()=>{renderCut();cg.style.opacity=1;},400);}
+  else{closeScenario();}
+}
+document.getElementById('scenario').addEventListener('click',advanceScenario);
+function closeScenario(){
+  document.getElementById('scenario').classList.remove('on');clearInterval(typeTimer);typing=false;
+  if(!scBgm.paused){scBgm.pause();if(CONFIG.BGM_URL&&bgmOn)bgm.play().catch(()=>{});}
+}
+
+/* ===== overlays ===== */
+function openOverlay(id){
+  playSfx('click');
+  const ov=document.getElementById('ov-'+id);ov.classList.add('on');ov.scrollTop=0;
+  if(id==='world')setTimeout(initReveal,50);
+  if(id==='id')ensureFonts().then(drawPreview);
+}
+function closeOverlay(id){document.getElementById('ov-'+id).classList.remove('on');}
+function initReveal(){
+  const ov=document.getElementById('ov-world');
+  const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('seen');}),{root:ov,threshold:.15});
+  ov.querySelectorAll('.reveal').forEach(r=>io.observe(r));
+}
+
+/* ===== toast ===== */
+let tT;function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2400);}
+
+/* ===== student ID generator ===== */
+const gradeStat={'S':[92,82],'A':[80,70],'B':[64,58],'C':[50,48],'D':[36,42],'F':[18,30],'?':[60,55]};
+let photoImg=null;
+const $=id=>document.getElementById(id);const pad2=v=>String(v).padStart(2,'0');
+
+/* ----- custom sliders (handle reaches both ends) ----- */
+function setSlider(el,val){
+  val=Math.max(0,Math.min(100,Math.round(val)));el.dataset.val=val;
+  el.querySelector('.fill').style.width=val+'%';
+  el.querySelector('.hd').style.left=val+'%';
+  return val;
+}
+function bindSlider(el,nEl,onChange){
+  setSlider(el,+el.dataset.val);
+  let dragging=false;
+  const upd=(clientX)=>{const r=el.getBoundingClientRect();const v=setSlider(el,((clientX-r.left)/r.width)*100);nEl.textContent=v;onChange();};
+  const down=e=>{dragging=true;upd((e.touches?e.touches[0]:e).clientX);e.preventDefault();};
+  const move=e=>{if(dragging)upd((e.touches?e.touches[0]:e).clientX);};
+  const up=()=>dragging=false;
+  el.addEventListener('mousedown',down);el.addEventListener('touchstart',down,{passive:false});
+  addEventListener('mousemove',move);addEventListener('touchmove',move,{passive:false});
+  addEventListener('mouseup',up);addEventListener('touchend',up);
+}
+
+/* ----- 공용 헬퍼 (둥근 사각 · 엠블럼 SVG) ----- */
+function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+function eagleURL(color){
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><g fill="${color}" stroke="${color}"><circle cx="32" cy="32" r="30" fill="none" stroke-width="1"/><circle cx="32" cy="32" r="25.5" fill="none" stroke-width="0.6"/><circle cx="32" cy="18.5" r="2.7"/><path d="M30 20 L34 20 L32 23.5 Z" stroke="none"/><path d="M29.4 22.5 L34.6 22.5 L33.4 40 L36 45.5 L32 48.5 L28 45.5 L30.6 40 Z" stroke="none"/><path d="M34 24 L50.5 19.5 L49.5 22.6 L34 26.4 Z" stroke="none"/><path d="M34 27.4 L47.5 24.4 L46.6 27.2 L34 30 Z" stroke="none"/><path d="M34 31 L44.5 28.8 L43.7 31.4 L34 33.4 Z" stroke="none"/><path d="M30 24 L13.5 19.5 L14.5 22.6 L30 26.4 Z" stroke="none"/><path d="M30 27.4 L16.5 24.4 L17.4 27.2 L30 30 Z" stroke="none"/><path d="M30 31 L19.5 28.8 L20.3 31.4 L30 33.4 Z" stroke="none"/></g></svg>`);
+}
+/* 엠블럼 이미지 캐시 — 로드되면 미리보기 재렌더 */
+function mkImg(color){const im=new Image();im.addEventListener('load',drawPreview);im.src=eagleURL(color);return im;}
+const _wm=mkImg('#ffffff'), _emb=mkImg('#aab4c0');
+function imgReady(im){return (im.complete&&im.naturalWidth)?Promise.resolve():new Promise(res=>im.addEventListener('load',res,{once:true}));}
+
+/* 폰트 로드(최초 1회) → 이후 동기 렌더 */
+let fontsReady=false;
+function ensureFonts(){
+  if(fontsReady)return Promise.resolve();
+  const ko='國際魔力者人材養成大學院원생증성명계열등급학번입학일유효기간출력통제인가미측정불물바람땅번개공간치유혼합 ';
+  const loads=[
+    document.fonts.load('700 22px "Noto Serif KR"',ko),
+    document.fonts.load('600 20px "Noto Serif KR"',ko),
+    document.fonts.load('600 18px "IBM Plex Sans KR"',ko),
+    document.fonts.load('500 11px "IBM Plex Sans KR"',ko),
+    document.fonts.load('500 13px "IBM Plex Sans KR"',ko),
+    document.fonts.load('600 9px "IBM Plex Sans KR"',ko),
+    document.fonts.load('500 18px "IBM Plex Mono"','0123456789-· '),
+    document.fonts.load('500 13px "IBM Plex Mono"','0123456789-·% '),
+    document.fonts.load('400 11px "Oswald"','IMDAE INTERNATIONLG-DVPSU·KOREASTUD '),
+  ];
+  return Promise.all(loads.map(p=>p&&p.catch?p.catch(()=>{}):p)).then(()=>document.fonts.ready).then(()=>{fontsReady=true;});
+}
+
+/* ===== 카드 1장 그리기 (미리보기·다운로드 공용 / 좌표계 1010×636) ===== */
+/* 고정(결정적) 바코드 패턴 — 매번 동일, 깨지지 않음 */
+const BARCODE=(()=>{let r=20250604,x=0,a=[];const n=()=>{r=(r*9301+49297)%233280;return r/233280;};while(x<114){const w=1+Math.floor(n()*3.5);if(n()>.4)a.push([x,w]);x+=w+1;}return a;})();
+function barcodeSVG(){return `<svg class="barcode" viewBox="0 0 114 34" preserveAspectRatio="none"><g fill="#cfd6dd">`+BARCODE.map(([x,w])=>`<rect x="${x}" y="0" width="${w}" height="34"/>`).join('')+`</g></svg>`;}
+
+function drawCard(x,W,H){
+  const steel='#aab4c0',line='rgba(180,196,212,.2)',paper='#ffffff',val='#eef3f8',seal='#c4474e',acc='#9fc0cc';
+  /* 바탕 */
+  rr(x,0,0,W,H,16);x.fillStyle='#0c0f15';x.fill();
+  const bgg=x.createLinearGradient(0,0,W,H);bgg.addColorStop(0,'#171c26');bgg.addColorStop(1,'#0c0f15');
+  rr(x,0,0,W,H,16);x.fillStyle=bgg;x.fill();
+  /* 워터마크 독수리(우하단, 클립) */
+  if(_wm.complete&&_wm.naturalWidth){x.save();rr(x,0,0,W,H,16);x.clip();x.globalAlpha=.07;x.drawImage(_wm,W-300,H-260,440,440);x.globalAlpha=1;x.restore();}
+  x.strokeStyle=line;x.lineWidth=1;rr(x,.5,.5,W-1,H-1,16);x.stroke();
+  /* 헤더 띠 */
+  const HD=112;
+  x.save();rr(x,0,0,W,HD,16);x.clip();x.fillStyle='rgba(0,0,0,.32)';x.fillRect(0,0,W,HD);x.restore();
+  x.strokeStyle='rgba(159,192,204,.16)';x.beginPath();x.moveTo(0,HD);x.lineTo(W,HD);x.stroke();
+  if(_emb.complete&&_emb.naturalWidth)x.drawImage(_emb,38,32,48,48);
+  x.textBaseline='alphabetic';x.textAlign='left';
+  x.fillStyle=paper;x.font='700 38px "Noto Serif KR",serif';x.fillText('國際魔力者人材養成大學院',104,58);
+  x.fillStyle=steel;x.font='400 16px Oswald,sans-serif';x.fillText('IMDI-AE · INTERNATIONAL MAGI-DEVELOPMENT INSTITUTE · KOREA',104,86);
+  x.textAlign='right';x.fillStyle=steel;x.font='400 17px Oswald,sans-serif';x.fillText('STUDENT ID',W-40,52);
+  x.fillStyle=paper;x.font='600 32px "Noto Serif KR",serif';x.fillText('원생증',W-40,86);x.textAlign='left';
+  /* 사진 칸 */
+  const px=44,py=156,pw=250,ph=320;const pg=x.createLinearGradient(px,py,px,py+ph);pg.addColorStop(0,'#2a3340');pg.addColorStop(1,'#181e27');
+  rr(x,px,py,pw,ph,10);x.fillStyle=pg;x.fill();x.strokeStyle=line;rr(x,px+.5,py+.5,pw-1,ph-1,10);x.stroke();
+  if(photoImg&&photoImg.complete&&photoImg.naturalWidth){x.save();rr(x,px,py,pw,ph,10);x.clip();const ir=photoImg.naturalWidth/photoImg.naturalHeight,br=pw/ph;let dw,dh,dx,dy;if(ir>br){dh=ph;dw=ph*ir;dx=px-(dw-pw)/2;dy=py;}else{dw=pw;dh=pw/ir;dx=px;dy=py-(dh-ph)/2;}x.drawImage(photoImg,dx,dy,dw,dh);x.restore();}
+  else{x.fillStyle='#46515f';x.beginPath();x.arc(px+pw/2,py+ph/2-34,38,0,7);x.fill();x.beginPath();x.moveTo(px+pw/2-58,py+ph/2+78);x.quadraticCurveTo(px+pw/2,py+ph/2-10,px+pw/2+58,py+ph/2+78);x.fill();}
+  /* 필드 */
+  const name=$('inName').value.trim()||'— —',aff=$('inAff').value,grade=$('inGrade').value;
+  const no='2035-AE-'+($('inNo').value||'0000').padStart(4,'0'),m=pad2($('inM').value||3),d=pad2($('inD').value||2);
+  const fx=336,rows=[['성명',name],['계열',aff],['등급',grade],['학번',no],['입학일',`2035 · ${m} · ${d}`],['유효기간','2039 · 02 · 28']];let fy=204;
+  rows.forEach(r=>{x.fillStyle=steel;x.font='500 19px "IBM Plex Sans KR",sans-serif';x.fillText(r[0],fx,fy);
+    const mono=['등급','학번','입학일','유효기간'].includes(r[0]);x.fillStyle=mono?val:paper;
+    x.font=mono?'500 30px "IBM Plex Mono",monospace':'600 30px "IBM Plex Sans KR",sans-serif';x.fillText(r[1],fx+128,fy);fy+=48;});
+  /* 구분선 */
+  x.strokeStyle='rgba(159,192,204,.16)';x.beginPath();x.moveTo(44,512);x.lineTo(W-44,512);x.stroke();
+  /* 게이지(출력/통제) */
+  const out=+$('slOut').dataset.val,con=+$('slCon').dataset.val;
+  function gauge(label,v,y){
+    x.fillStyle=steel;x.font='500 18px "IBM Plex Sans KR",sans-serif';x.textAlign='left';x.fillText(label,44,y+6);
+    const bx=104,bw=300,bh=10,byy=y-4;
+    x.fillStyle='rgba(180,196,212,.18)';rr(x,bx,byy,bw,bh,5);x.fill();
+    x.fillStyle=acc;rr(x,bx,byy,bw*v/100,bh,5);x.fill();
+    x.fillStyle=acc;x.font='500 20px "IBM Plex Mono",monospace';x.fillText(v+'%',bx+bw+14,y+7);
+  }
+  gauge('출력',out,556);gauge('통제',con,596);
+  /* ARKEN 인가 + 고정 바코드(우하단) */
+  x.fillStyle=seal;x.font='600 13px "IBM Plex Sans KR",sans-serif';x.textAlign='right';x.fillText('ARKEN GROUP · 인가',W-44,548);x.textAlign='left';
+  const bcW=300,bcX=W-44-bcW,bcY=566,bcH=42,sc=bcW/114;x.fillStyle='#cfd6dd';
+  BARCODE.forEach(([bxp,w])=>x.fillRect(bcX+bxp*sc,bcY,Math.max(1,w*sc),bcH));
+}
+/* 미리보기 캔버스에 그리기(2배 해상도, CSS로 100% 축소) */
+const CARD_W=1010,CARD_H=636,CARD_SCALE=2;
+function drawPreview(){
+  const cv=$('idCanvas');if(!cv)return;
+  cv.width=CARD_W*CARD_SCALE;cv.height=CARD_H*CARD_SCALE;
+  const x=cv.getContext('2d');x.setTransform(CARD_SCALE,0,0,CARD_SCALE,0,0);x.clearRect(0,0,CARD_W,CARD_H);
+  drawCard(x,CARD_W,CARD_H);
+}
+
+function refreshID(){
+  const out=+$('slOut').dataset.val,con=+$('slCon').dataset.val;
+  $('inOutN').textContent=out;$('inConN').textContent=con;
+  drawPreview();
+}
+['inName','inAff','inGrade','inNo','inM','inD'].forEach(id=>{$(id).addEventListener('input',refreshID);$(id).addEventListener('change',refreshID);});
+bindSlider($('slOut'),$('inOutN'),refreshID);
+bindSlider($('slCon'),$('inConN'),refreshID);
+/* 등급 선택 시 출력/통제 추천값 자동 세팅(직접 조정 가능) */
+$('inGrade').addEventListener('change',()=>{const st=gradeStat[$('inGrade').value]||[60,55];setSlider($('slOut'),st[0]);setSlider($('slCon'),st[1]);refreshID();});
+$('photoInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{photoImg=new Image();photoImg.addEventListener('load',drawPreview);photoImg.src=ev.target.result;};r.readAsDataURL(f);});
+
+/* ===== 가중치 랜덤 ===== */
+function weighted(table){const tot=table.reduce((s,t)=>s+t[1],0);let r=Math.random()*tot;for(const[v,w]of table){if((r-=w)<=0)return v;}return table[0][0];}
+const AFF_W=[['불',20],['물',20],['바람',20],['땅',20],['번개',18.5],['공간',1],['치유',0.4],['혼합',0.1]];
+const GRADE_W=[['S',1],['A',8],['B',20],['C',45],['D',20],['F',6]];
+function rollID(){
+  playSfx('click');
+  const aff=weighted(AFF_W), grade=weighted(GRADE_W);
+  $('inAff').value=aff; $('inGrade').value=grade;
+  const base=gradeStat[grade]||[60,55];
+  const jit=(v)=>Math.max(0,Math.min(100,v+Math.round((Math.random()-0.5)*10)));
+  let out=jit(base[0]), con=jit(base[1]);
+  if(grade==='D'){if(Math.random()<.5)con=Math.max(0,con-18);else out=Math.max(0,out-18);}
+  setSlider($('slOut'),out); setSlider($('slCon'),con);
+  $('inNo').value=String(Math.floor(Math.random()*9999)).padStart(4,'0');
+  $('inM').value=Math.floor(Math.random()*12)+1; $('inD').value=Math.floor(Math.random()*28)+1;
+  refreshID();
+  toast(`계열 ${aff} · ${grade}급 · 출력 ${out}% · 통제 ${con}%`);
+}
+
+/* 다운로드 — 미리보기와 100% 동일한 drawCard 사용 */
+function downloadID(){
+  Promise.all([ensureFonts(),imgReady(_wm),imgReady(_emb)]).then(()=>{
+    const c=document.createElement('canvas');c.width=CARD_W*CARD_SCALE;c.height=CARD_H*CARD_SCALE;
+    const x=c.getContext('2d');x.setTransform(CARD_SCALE,0,0,CARD_SCALE,0,0);
+    drawCard(x,CARD_W,CARD_H);
+    const name=$('inName').value.trim()||'원생';
+    c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`IMDI-AE_원생증_${name}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);},'image/png');
+  });
+}
+
+/* 초기 렌더 + 폰트/엠블럼 로드 후 재렌더(미리보기=PNG 동일) */
+refreshID();
+ensureFonts().then(drawPreview);
+imgReady(_wm).then(drawPreview);
+imgReady(_emb).then(drawPreview);
+document.fonts.ready.then(drawPreview);
+</script>
+</body>
+</html>
