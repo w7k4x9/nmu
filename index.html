@@ -91,7 +91,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 @keyframes sweepGo{0%{background-position:-60% 0}100%{background-position:160% 0}}
 
 /* ================= LOBBY ================= */
-#lobby{position:fixed;inset:0;z-index:10;opacity:0;transition:opacity 1.1s ease .2s}
+#lobby{position:fixed;inset:0;z-index:10;opacity:0;transition:opacity 1.1s ease .2s;background:#0C0F14}
 #lobby.on{opacity:1}
 
 /* HUD top bar */
@@ -929,8 +929,8 @@ function updateHUD(){
   document.getElementById('hOutBar').style.width=(c.out||0)+'%';
 }
 /* 영상 재생속도: 기본 2.5배(=화면상 원속도 1x). 예외만 여기 적기 */
-const VIDEO_RATE={dohyun:1.25}; // dohyun = 화면상 0.5배 (0.4인코딩 × 1.25)
-const rateOf=k=>VIDEO_RATE[CHARS[k].key]??2.5;
+const VIDEO_RATE={};
+const rateOf=k=>VIDEO_RATE[CHARS[k].key]??1;
 function playActiveVideo(){
   plates.forEach((p,k)=>{const v=p.querySelector('video');if(!v)return;if(k===index){v.playbackRate=rateOf(k);v.play().catch(()=>{});}else{v.pause();v.currentTime=0;}});
 }
