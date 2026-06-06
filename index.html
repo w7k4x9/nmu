@@ -124,14 +124,14 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .plate{position:relative;flex:0 0 auto;height:100%;display:flex;align-items:flex-end;justify-content:center;
   opacity:.28;transform:scale(.8);transition:opacity .55s,transform .55s;filter:grayscale(.4) brightness(.7)}
 .plate.active{opacity:1;transform:scale(1);filter:none}
-.plate .glow{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:78%;height:72%;border-radius:50%;
-  background:radial-gradient(closest-side,var(--g),transparent 72%);filter:blur(8px);z-index:0}
+.plate .glow{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:86%;height:78%;border-radius:50%;
+  background:radial-gradient(closest-side,var(--g),transparent 72%);filter:blur(14px);z-index:2;mix-blend-mode:screen;pointer-events:none}
 .plate .figure{position:relative;z-index:1;height:90%;width:auto;display:flex;align-items:flex-end}
 .plate .figure svg{height:100%;width:auto;color:var(--a);opacity:.5}
 .plate .vid{position:absolute;z-index:1;height:90%;left:50%;bottom:0;transform:translateX(-50%)}
 .plate .vid video{display:block;height:100%;width:auto;object-fit:contain}
 /*.plate .vid .film{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top,rgba(19,24,34,.6) 0%,rgba(19,24,34,.05) 100%)} 생각보다 별로라 주석 처리*/
-.plate .nameplate{position:absolute;z-index:2;bottom:11%;left:50%;transform:translateX(-50%);text-align:center;width:max-content}
+.plate .nameplate{position:absolute;z-index:3;bottom:11%;left:50%;transform:translateX(-50%);text-align:center;width:max-content}
 .plate .nameplate .nm{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3.4vw,30px);letter-spacing:.03em;text-shadow:0 2px 18px rgba(0,0,0,.7)}
 .plate .nameplate .meta{margin-top:7px;display:inline-flex;gap:9px;align-items:center;font-family:var(--label);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--paper-2)}
 .plate .nameplate .meta .dot{color:var(--accent)}
@@ -592,16 +592,16 @@ const CONFIG = {
   // 효과음: URL 넣으면 그 파일 재생, 비우면 코드 합성음 사용
   SFX: { gate:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/gate.mp3", click:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/click.mp3", swipe:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/bgm/nmu/swipe.mp3", type:"" },
   // 캐릭터별 9:16 영상 URL (없으면 placeholder 플레이트)
-  VIDEOS: { jay:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/jay_standing.webm", mael:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/lef_standing.webm", kurose:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/kur_standing.webm", caleb:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/cal_standing.webm", dohyun:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/doh_standing.webm", abel:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/abel_standing.webm", ernst:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/ern_standing.webm" },
+  VIDEOS: { jay:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/jay_stand_mute.mp4", mael:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/lef_stand.mp4", kurose:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/kur_stand.mp4", caleb:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/cal_stand.mp4", dohyun:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/doh_stand.mp4", abel:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/abel_stand.mp4", ernst:"https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/ern_stand.mp4" },
   // 시나리오 컷별 배경 영상 URL (키: 캐릭터키, 값: [컷1,컷2,...]). 없으면 placeholder
   SCENARIO_VIDEOS: {
-    jay:    ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/jay_burning.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/jay_burn.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/jay_child.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/jay_adult.webm"],
-    mael:   ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/lef_hospital.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/lef_paper.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/lef_laptop.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/lef_later.webm"],
-    kurose: ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/kur_sound.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/kur_burning.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/kur_crying.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/kur_domitory.webm"],
-    caleb:  ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/cal_america.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/cal_campus.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/cal_paper.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/cal_seminar.webm"],
-    dohyun: ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/doh_burning.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/doh_child.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/doh_white.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/doh_angry.webm"],
-    abel:   ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/abel_venta.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/abel_normal.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/abel_domitory.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/abel_sad.webm"],
-    ernst:  ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/ern_home.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/ern_laptop.webm","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/ern_domitory.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/ern_user.webm"]
+    jay:    ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/jay_burning.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/jay_burn.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/jay_child.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/jay_adult.mp4"],
+    mael:   ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/lef_hospital.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/lef_paper.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/lef_laptop.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/lef_later.mp4"],
+    kurose: ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/kur_sound.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/kur_burning.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/kur_crying.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/kur_domitory.mp4"],
+    caleb:  ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/cal_sports.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/cal_paper.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/cal_university.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/cal_talk.mp4"],
+    dohyun: ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/doh_burning.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/doh_child_mute.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/doh_white.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/doh_angry.mp4"],
+    abel:   ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/abel_venta.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/abel_normal_mute.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/abel_domitory.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/abel_sad.mp4"],
+    ernst:  ["https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/ern_home.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/ern_laptop.mp4","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/ern_domitory.png","https://pub-0d8c16d8f5c84439bd8ecfad1725eec1.r2.dev/video/nmu/ern_user.mp4"]
   },
   // 시나리오 컷별 효과음 URL (컷 진입 시 1회 재생). 비우면 무음. [컷1,컷2,컷3,컷4]
   SCENARIO_SFX: {
